@@ -13,7 +13,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.InvalidKeyException;
 import java.security.cert.CertificateException;
+import java.sql.Array;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 import org.hyperledger.fabric.client.CommitException;
 import org.hyperledger.fabric.client.CommitStatusException;
@@ -33,52 +35,74 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 public class NetworkController {
-  private static final String MSP_ID = System.getenv().getOrDefault("MSP_ID", "Org1MSP");
+  // dane kanalu i sieci
   private static final String CHANNEL_NAME = System.getenv().getOrDefault("CHANNEL_NAME", "mychannel");
-  private static final String CHAINCODE_NAME = System.getenv().getOrDefault("CHAINCODE_NAME", "basic");
+  private static final String CHAINCODE_NAME = System.getenv().getOrDefault("CHAINCODE_NAME", "secured");
+
+  // dane org 1
+  private static final String MSP_ID_Org1 = System.getenv().getOrDefault("MSP_ID", "Org1MSP");
+  // Path to crypto materials.
+  private static final Path CRYPTO_PATH_Org1 = Paths.get("../../test-network/organizations/peerOrganizations/org1.example.com");
+  // Path to user certificate.
+  private static final Path CERT_PATH_Org1 = CRYPTO_PATH_Org1.resolve(Paths.get("users/Admin@org1.example.com/msp/signcerts/Admin@org1.example.com-cert.pem"));
+          // Path to user private key directory.
+  private static final Path KEY_DIR_PATH_Org1 = CRYPTO_PATH_Org1.resolve(Paths.get("users/Admin@org1.example.com/msp/keystore"));
+  // Path to peer tls certificate.
+  private static final Path TLS_CERT_PATH_Org1 = CRYPTO_PATH_Org1.resolve(Paths.get("peers/peer0.org1.example.com/tls/ca.crt"));
+
+
+
+  // dane org 2
+  private static final String MSP_ID_Org2 = System.getenv().getOrDefault("MSP_ID", "Org2MSP");
 
   // Path to crypto materials.
-  private static final Path CRYPTO_PATH = Paths.get("../../test-network/organizations/peerOrganizations/org1.example.com");
+  private static final Path CRYPTO_PATH_Org2  = Paths.get("../../test-network/organizations/peerOrganizations/org2.example.com");
   // Path to user certificate.
-  private static final Path CERT_PATH = CRYPTO_PATH.resolve(Paths.get("users/User1@org1.example.com/msp/signcerts/cert.pem"));
+  private static final Path CERT_PATH_Org2 = CRYPTO_PATH_Org2.resolve(Paths.get("users/User1@org2.example.com/msp/signcerts/cert.pem"));
   // Path to user private key directory.
-  private static final Path KEY_DIR_PATH = CRYPTO_PATH.resolve(Paths.get("users/User1@org1.example.com/msp/keystore"));
+  private static final Path KEY_DIR_PATH_Org2  = CRYPTO_PATH_Org1.resolve(Paths.get("users/User1@org2.example.com/msp/keystore"));
   // Path to peer tls certificate.
-  private static final Path TLS_CERT_PATH = CRYPTO_PATH.resolve(Paths.get("peers/peer0.org1.example.com/tls/ca.crt"));
+  private static final Path TLS_CERT_PATH_Org2  = CRYPTO_PATH_Org1.resolve(Paths.get("peers/peer0.org2.example.com/tls/ca.crt")); // czy jest peer0?
 
   // Gateway peer end point.
-  private static final String PEER_ENDPOINT = "localhost:7051";
-  private static final String OVERRIDE_AUTH = "peer0.org1.example.com";
+  private static final String PEER_ENDPOINT_Org1 = "localhost:7050";
+  private static final String PEER_ENDPOINT_Org2 = "localhost:9051";
 
+  private static final String OVERRIDE_AUTH_Org1 = "peer0.org1.example.com";
+  private static final String OVERRIDE_AUTH_Org2 = "peer0.org2.example.com";
+
+
+  // nie wiem co to ;)
   private final Contract contract;
   private final String assetId = "asset" + Instant.now().toEpochMilli();
   private final Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
-  private static ManagedChannel newGrpcConnection() throws IOException, CertificateException {
-    var tlsCertReader = Files.newBufferedReader(TLS_CERT_PATH);
+  private static ManagedChannel newGrpcConnection(Path tlsCertPath, String host, String peerName) throws IOException, CertificateException {
+    var tlsCertReader = Files.newBufferedReader(tlsCertPath);
     var tlsCert = Identities.readX509Certificate(tlsCertReader);
 
-    return NettyChannelBuilder.forTarget(PEER_ENDPOINT)
-        .sslContext(GrpcSslContexts.forClient().trustManager(tlsCert).build()).overrideAuthority(OVERRIDE_AUTH)
+    return NettyChannelBuilder.forTarget(host)
+        .sslContext(GrpcSslContexts.forClient().trustManager(tlsCert).build()).overrideAuthority(peerName)
         .build();
   }
 
-  private static Identity newIdentity() throws IOException, CertificateException {
-    var certReader = Files.newBufferedReader(CERT_PATH);
+  private static Identity newIdentity(Path certPath, String mspId) throws IOException, CertificateException {
+    var certReader = Files.newBufferedReader(certPath);
     var certificate = Identities.readX509Certificate(certReader);
 
-    return new X509Identity(MSP_ID, certificate);
+    return new X509Identity(mspId, certificate);
   }
 
-  private static Signer newSigner() throws IOException, InvalidKeyException {
-    var keyReader = Files.newBufferedReader(getPrivateKeyPath());
+  // ta funckcja pobiera dane organizacji
+  private static Signer newSigner(String privateKeyDirPath) throws IOException, InvalidKeyException {
+    var keyReader = Files.newBufferedReader(getPrivateKeyPath(privateKeyDirPath));
     var privateKey = Identities.readPrivateKey(keyReader);
 
     return Signers.newPrivateKeySigner(privateKey);
   }
 
-  private static Path getPrivateKeyPath() throws IOException {
-    try (var keyFiles = Files.list(KEY_DIR_PATH)) {
+  private static Path getPrivateKeyPath(String keyDirPath) throws IOException {
+    try (var keyFiles = Files.list(Path.of(keyDirPath))) {
       return keyFiles.findFirst().orElseThrow();
     }
   }
@@ -87,14 +111,23 @@ public class NetworkController {
       throws CertificateException, IOException, InvalidKeyException, InterruptedException, EndorseException, CommitException, SubmitException, CommitStatusException {
     // The gRPC client connection should be shared by all Gateway connections to
     // this endpoint.
-    var channel = newGrpcConnection();
+    var channel = newGrpcConnection(TLS_CERT_PATH_Org1, PEER_ENDPOINT_Org1, OVERRIDE_AUTH_Org1);
 
-    var builder = Gateway.newInstance().identity(newIdentity()).signer(newSigner()).connection(channel)
+    var builder = Gateway.newInstance().identity(newIdentity(CERT_PATH_Org1, MSP_ID_Org1)).signer(newSigner(String.valueOf(KEY_DIR_PATH_Org1))).connection(channel)
         // Default timeouts for different gRPC calls
         .evaluateOptions(options -> options.withDeadlineAfter(5, TimeUnit.SECONDS))
         .endorseOptions(options -> options.withDeadlineAfter(15, TimeUnit.SECONDS))
         .submitOptions(options -> options.withDeadlineAfter(5, TimeUnit.SECONDS))
         .commitStatusOptions(options -> options.withDeadlineAfter(1, TimeUnit.MINUTES));
+
+    // 1. zmienic nazwy na gateway 1 itd
+    // 2. ogarnac cos w rodzaju init ledger
+    // 3. sprobowac to wywolac
+    // 4. sprobowac wywolad istniejace read one
+    // 5. dopisac do chaincode read all
+    // w tym momencie by byla opcja pobierania wszystkich i pojedynczych to juz mozna z tym dzialac
+    // 6. zmienic model na lotniczy ;)
+    // 7. dalej by byly potrzebne endpointy do spedzay lub edycji
 
     try (var gateway = builder.connect()) {
       // Get a network instance representing the channel where the smart contract is
@@ -119,7 +152,7 @@ public class NetworkController {
   private void initLedger() throws EndorseException, SubmitException, CommitStatusException, CommitException {
     System.out.println("\n--> Submit Transaction: InitLedger, function creates the initial set of assets on the ledger");
 
-    contract.submitTransaction("InitLedger");
+    //contract.submitTransaction("InitLedger");
 
     System.out.println("*** Transaction committed successfully");
   }
@@ -130,7 +163,7 @@ public class NetworkController {
   private byte[] getAllAssets() throws GatewayException {
     System.out.println("\n--> Evaluate Transaction: GetAllAssets, function returns all the current assets on the ledger");
 
-    var result = contract.evaluateTransaction("GetAllAssets");
+    var result = contract.evaluateTransaction("GetAllAssets", String.valueOf(new ArrayList<>()));
 
     System.out.println("*** Result: " + prettyJson(result));
 
