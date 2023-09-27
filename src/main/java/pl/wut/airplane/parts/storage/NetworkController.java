@@ -6,17 +6,21 @@ import com.google.gson.JsonParser;
 import io.grpc.ManagedChannel;
 import io.grpc.netty.shaded.io.grpc.netty.GrpcSslContexts;
 import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder;
+
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.ObjectOutputStream;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.InvalidKeyException;
 import java.security.cert.CertificateException;
-import java.sql.Array;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
+
 import org.hyperledger.fabric.client.CommitException;
 import org.hyperledger.fabric.client.CommitStatusException;
 import org.hyperledger.fabric.client.Contract;
@@ -31,7 +35,11 @@ import org.hyperledger.fabric.client.identity.Signers;
 import org.hyperledger.fabric.client.identity.X509Identity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
+import pl.wut.airplane.parts.storage.model.AssetPrivateData;
+import pl.wut.airplane.parts.storage.model.AssetPropertiesJSON;
 
 @RestController
 public class NetworkController {
@@ -44,9 +52,9 @@ public class NetworkController {
   // Path to crypto materials.
   private static final Path CRYPTO_PATH_Org1 = Paths.get("../../test-network/organizations/peerOrganizations/org1.example.com");
   // Path to user certificate.
-  private static final Path CERT_PATH_Org1 = CRYPTO_PATH_Org1.resolve(Paths.get("users/Admin@org1.example.com/msp/signcerts/Admin@org1.example.com-cert.pem"));
+  private static final Path CERT_PATH_Org1 = CRYPTO_PATH_Org1.resolve(Paths.get("users/User1@org1.example.com/msp/signcerts/User1@org1.example.com-cert.pem"));
           // Path to user private key directory.
-  private static final Path KEY_DIR_PATH_Org1 = CRYPTO_PATH_Org1.resolve(Paths.get("users/Admin@org1.example.com/msp/keystore"));
+  private static final Path KEY_DIR_PATH_Org1 = CRYPTO_PATH_Org1.resolve(Paths.get("users/User1@org1.example.com/msp/keystore"));
   // Path to peer tls certificate.
   private static final Path TLS_CERT_PATH_Org1 = CRYPTO_PATH_Org1.resolve(Paths.get("peers/peer0.org1.example.com/tls/ca.crt"));
 
@@ -65,7 +73,7 @@ public class NetworkController {
   private static final Path TLS_CERT_PATH_Org2  = CRYPTO_PATH_Org1.resolve(Paths.get("peers/peer0.org2.example.com/tls/ca.crt")); // czy jest peer0?
 
   // Gateway peer end point.
-  private static final String PEER_ENDPOINT_Org1 = "localhost:7050";
+  private static final String PEER_ENDPOINT_Org1 = "localhost:7051";
   private static final String PEER_ENDPOINT_Org2 = "localhost:9051";
 
   private static final String OVERRIDE_AUTH_Org1 = "peer0.org1.example.com";
@@ -140,13 +148,26 @@ public class NetworkController {
       // Initialize a set of asset data on the ledger using the chaincode 'InitLedger' function.
       initLedger();
     } finally {
-      channel.shutdownNow().awaitTermination(5, TimeUnit.SECONDS);
+        // kiedy powinnam posprzatac????
+      //channel.shutdownNow().awaitTermination(5, TimeUnit.SECONDS);
     }
   }
 
   @GetMapping("/parts")
   public ResponseEntity<byte[]> getAllParts() throws GatewayException {
     return ResponseEntity.ok(getAllAssets());
+  }
+
+  @GetMapping("/parts/{id}")
+  public String getAssetById(@PathVariable String id) throws GatewayException {
+    readAssetById(id);
+    return "ok";
+  }
+
+  @PostMapping("/parts")
+  public ResponseEntity<String> addPart() throws GatewayException, CommitException, IOException {
+    AssetPrivateData data = new AssetPrivateData("asset_properties", "color", 10L);
+    return ResponseEntity.created(URI.create("")).body(createAsset("owner org", "pub desc", data));
   }
 
   private void initLedger() throws EndorseException, SubmitException, CommitStatusException, CommitException {
@@ -183,12 +204,38 @@ public class NetworkController {
    * Submit a transaction synchronously, blocking until it has been committed to
    * the ledger.
    */
-  private void createAsset() throws EndorseException, SubmitException, CommitStatusException, CommitException {
-    System.out.println("\n--> Submit Transaction: CreateAsset, creates new asset with ID, Color, Size, Owner and AppraisedValue arguments");
+  private String createAsset(String ownerOrg, String publicDescription, AssetPrivateData privateData) throws GatewayException, CommitException, IOException {
+    System.out.println("\n--> Submit Transaction: CreateAsset, creates new asset");
 
-    contract.submitTransaction("CreateAsset", assetId, "yellow", "5", "Tom", "1300");
+    AssetPropertiesJSON assetPropertiesJSON = new AssetPropertiesJSON("asset_properties", privateData.getColor(), privateData.getSize(), "a94a8fe5ccb19ba61c4c0873d391e987982fbbd3"); // ?
+    byte[] resultBytes = contract.newProposal("CreateAsset")
+            .addArguments(publicDescription)
+            .putTransient("asset_properties",  assetPropertiesJSON.toString()) // ?
+            .build()
+            .endorse()
+            .submit();
+
+    String assetID = prettyJson(resultBytes); // decode to utf
+    System.out.println(String.format("id: %s", assetID));
 
     System.out.println("*** Transaction committed successfully");
+    return assetID;
+  }
+
+  private byte[] convertToBytes(Object object) throws IOException {
+    try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
+         ObjectOutputStream out = new ObjectOutputStream(bos)) {
+      out.writeObject(object);
+      return bos.toByteArray();
+    }
+  }
+
+  private void readAssetById(String assetId) throws GatewayException {
+    System.out.println("\n--> Evaluate Transaction: ReadAsset, function returns asset attributes");
+
+    var evaluateResult = contract.evaluateTransaction("ReadAsset", assetId);
+
+    System.out.println("*** Result:" + prettyJson(evaluateResult));
   }
 
   /**
@@ -220,14 +267,8 @@ public class NetworkController {
     System.out.println("*** Transaction committed successfully");
   }
 
-  private void readAssetById() throws GatewayException {
-    System.out.println("\n--> Evaluate Transaction: ReadAsset, function returns asset attributes");
 
-    var evaluateResult = contract.evaluateTransaction("ReadAsset", assetId);
-
-    System.out.println("*** Result:" + prettyJson(evaluateResult));
-  }
-
+  // @TODO Przyklad ze nie dziala cos
   /**
    * submitTransaction() will throw an error containing details of any error
    * responses from the smart contract.

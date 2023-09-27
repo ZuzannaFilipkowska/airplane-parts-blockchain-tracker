@@ -24,6 +24,7 @@ dependencies {
 	implementation("io.grpc:grpc-netty-shaded:1.50.1")
 	implementation("com.google.code.gson:gson:2.9.1")
 	compileOnly("org.projectlombok:lombok")
+	compileOnly("org.apache.commons:commons-lang3:3.5")
 	runtimeOnly("com.h2database:h2")
 	annotationProcessor("org.projectlombok:lombok")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
