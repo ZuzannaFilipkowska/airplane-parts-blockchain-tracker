@@ -1,0 +1,40 @@
+@import "../../../../../colors";
+
+.tracking {
+  &__search {
+    width: 70rem;
+    text-align: center;
+    font-size: medium;
+    font-weight: 700;
+    height: 50rem;
+    background: #222831;
+    display: flex;
+    flex-direction: column;
+    margin: 10rem auto auto;
+    align-items: center;
+  }
+  height: 100%;
+  background: $app-grey-light;
+
+  &__title {
+    width: 70rem;
+  }
+
+  &__search-field {
+    margin-top: 5rem;
+  }
+
+  &__parcel {
+    color: $app-color-yellow;
+    font-size: 1.6rem !important;
+    opacity: 90%;
+  }
+
+  &__no-data {
+    color: $app-white;
+  }
+
+  &__parcel-text {
+    font-size: 1.6rem !important;
+  }
+}

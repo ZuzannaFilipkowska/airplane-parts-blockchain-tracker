@@ -1,0 +1,98 @@
+// Custom Theming for Angular Material
+// For more information: https://material.angular.io/guide/theming
+@use "@angular/material" as mat;
+@include mat.core();
+@import "./colors";
+
+$primary-palette: (
+  50: #e9eaea,
+  100: #e7e7e7,
+  200: #b6b7b8,
+  300: #9e9fa0,
+  400: #6d6e70,
+  500: #555658,
+  600: #3d3e41,
+  700: #222831,
+  800: #242629,
+  900: #0c0e11,
+  contrast: (
+    50: $app-grey-dark,
+    100: $app-grey-dark,
+    200: $app-grey-dark,
+    300: $app-grey-dark,
+    400: $app-white,
+    500: $app-white,
+    600: $app-white,
+    700: $app-white,
+    800: $app-white,
+    900: $app-white,
+  ),
+);
+
+$secondary-palette: (
+  50: #e9eaea,
+  100: #fff6e1,
+  200: #fff2d2,
+  300: #ffedc3,
+  400: #ffe9b4,
+  500: #ffe5a5,
+  600: #ffe096,
+  700: #ffdc87,
+  800: #ffd778,
+  900: #ffd369,
+  contrast: (
+    50: $app-grey-dark,
+    100: $app-grey-dark,
+    200: $app-grey-dark,
+    300: $app-grey-dark,
+    400: $app-grey-light,
+    500: $app-grey-light,
+    600: $app-grey-light,
+    700: $app-grey-light,
+    800: $app-grey-light,
+    900: $app-grey-light,
+  ),
+);
+
+$frontend-primary: mat.define-palette($primary-palette);
+$frontend-accent: mat.define-palette($secondary-palette);
+$frontend-warn: mat.define-palette(mat.$red-palette);
+
+$frontend-theme: mat.define-light-theme(
+  (
+    color: (
+      primary: $frontend-primary,
+      accent: $frontend-accent,
+      warn: $frontend-warn,
+    ),
+  )
+);
+
+@include mat.all-component-themes($frontend-theme);
+
+html,
+body {
+  height: 100%;
+  font-size: 10px;
+}
+body {
+  margin: 0;
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+}
+
+mat-form-field .mat-form-field-wrapper .mat-form-field-flex {
+  background: #ffd369 !important;
+  border-radius: 0.6rem !important;
+  min-width: 25rem;
+  font-size: 1.6rem;
+}
+
+mat-card {
+  max-width: 70rem;
+  box-sizing: border-box;
+}
+
+.mat-button {
+  background: $app-grey-dark;
+  color: $app-color-yellow;
+}

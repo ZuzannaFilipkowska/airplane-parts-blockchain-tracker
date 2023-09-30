@@ -1,0 +1,59 @@
+@import "../../../colors";
+
+.sidenav-container {
+  height: 100%;
+
+  &__title {
+    color: $app-color-yellow;
+  }
+}
+
+.sidenav {
+  width: 11rem;
+  background: #222831;
+}
+
+.sidenav .mat-toolbar {
+  background: $app-color-yellow;
+}
+
+.mat-toolbar.mat-primary {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: $app-grey-dark;
+}
+
+.sidenav__link-text {
+  margin-right: 1rem;
+  color: $app-color-yellow;
+}
+
+.sidenav__box-icon {
+  margin-left: 3rem;
+}
+
+.mat-sidenav-content {
+  background: $app-grey-light;
+}
+
+.page {
+  &__toolbar {
+    display: flex;
+    flex-direction: row;
+
+    &-menu {
+      align-items: center;
+    }
+
+    &-menu-btn {
+      background-color: $app-grey-light;
+      width: 12rem;
+      margin-right: 2rem;
+    }
+
+    &-spacer {
+      flex: 1 1 auto;
+    }
+  }
+}

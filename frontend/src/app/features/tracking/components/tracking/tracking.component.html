@@ -1,0 +1,37 @@
+<app-page>
+  <section class="tracking">
+    <div class="tracking__search">
+      <mat-card color="secondary" class="tracking__title">
+        <p>{{ "tracking.track" | translate }}:</p>
+      </mat-card>
+      <div class="tracking__search-field">
+        <mat-form-field appearance="fill" color="secondary">
+          <mat-label>{{ "tracking.enterId" | translate }}</mat-label>
+          <input matInput type="text" [formControl]="packageIdControl" />
+        </mat-form-field>
+      </div>
+      <div
+        class="tracking__search-results"
+        *ngIf="!isLoading; else showSpinner"
+      >
+        <div class="tracking__parcel" *ngIf="parcel">
+          <p class="tracking__parcel-text">
+            {{ "tracking.parcel.status" | translate }} {{ parcel.status }}
+          </p>
+          <p class="tracking__parcel-text">
+            {{ "tracking.parcel.address" | translate }} {{ parcel.address }}
+          </p>
+          <p class="tracking__parcel-text">
+            {{ "tracking.parcel.number" | translate }} {{ parcel.trackingId }}
+          </p>
+        </div>
+        <div *ngIf="!parcel" class="tracking__no-data">
+          {{ "tracking.noData" | translate }}
+        </div>
+      </div>
+      <ng-template #showSpinner>
+        <mat-spinner class="tracking__spinner"></mat-spinner>
+      </ng-template>
+    </div>
+  </section>
+</app-page>

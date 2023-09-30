@@ -1,0 +1,35 @@
+<app-page>
+  <div class="login">
+    <h2 class="login__title">{{ "login.title" | translate }}</h2>
+    <form class="login__form" [formGroup]="loginForm">
+      <mat-form-field appearance="fill" floatLabel="always">
+        <mat-label>{{ "login.username" | translate }}</mat-label>
+        <input formControlName="username" matInput type="text" placeholder="" />
+      </mat-form-field>
+      <mat-form-field appearance="fill" floatLabel="always">
+        <mat-label>{{ "login.password" | translate }}</mat-label>
+        <input
+          formControlName="password"
+          matInput
+          [type]="hide ? 'password' : 'text'"
+        />
+        <button
+          mat-icon-button
+          matSuffix
+          (click)="hide = !hide"
+          [attr.aria-pressed]="hide"
+        >
+          <mat-icon>{{ hide ? "visibility_off" : "visibility" }}</mat-icon>
+        </button>
+      </mat-form-field>
+      <div class="login__action-buttons">
+        <a mat-button routerLink="/register" class="btn btn-link">{{
+          "register.title" | translate
+        }}</a>
+        <button mat-button class="btn btn-primary" (click)="onSubmit()">
+          {{ "login.title" | translate }}
+        </button>
+      </div>
+    </form>
+  </div>
+</app-page>

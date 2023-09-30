@@ -1,0 +1,18 @@
+.login {
+  margin: 3rem 0 20rem 3rem;
+  max-width: 40rem;
+
+  &__title {
+    font-size: 2.8rem;
+  }
+
+  &__form {
+    display: flex;
+    flex-direction: column;
+  }
+
+  &__action-buttons {
+    display: flex;
+    gap: 2rem;
+  }
+}

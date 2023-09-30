@@ -1,0 +1,28 @@
+@import "../../../colors";
+
+.history {
+  &__content {
+    width: 70rem;
+    text-align: center;
+    font-size: medium;
+    font-weight: 700;
+    background: #222831;
+    display: flex;
+    flex-direction: column;
+    margin: 10rem auto auto;
+    align-items: center;
+  }
+  height: 100%;
+  background: $app-grey-light;
+
+  &__title {
+    padding: 1rem;
+    margin-top: 2rem;
+    color: #ffd369;
+  }
+
+  &__table {
+    width: 60rem;
+    margin-bottom: 2rem;
+  }
+}

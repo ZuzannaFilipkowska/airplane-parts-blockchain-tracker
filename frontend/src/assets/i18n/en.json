@@ -1,0 +1,28 @@
+{
+  "tracking": {
+    "track": "Track your packages:",
+    "enterId": "Enter id",
+    "parcel": {
+      "status": "Status: ",
+      "address": "Address: ",
+      "number": "Tracking number: "
+    },
+    "noData": "No data found"
+  },
+  "login": {
+    "title": "Login",
+    "username": "Username",
+    "password": "Enter your password"
+  },
+  "register": {
+    "title": "Register",
+    "username": "Username",
+    "password": "Password",
+    "name": "Name",
+    "surname": "Surname",
+    "email": "Email"
+  },
+  "history": {
+    "title": "Your search history:"
+  }
+}

@@ -1,0 +1,51 @@
+<mat-sidenav-container class="sidenav-container">
+  <mat-sidenav
+    #drawer
+    class="sidenav"
+    fixedInViewport
+    [attr.role]="(isHandset$ | async) ? 'dialog' : 'navigation'"
+    [mode]="(isHandset$ | async) ? 'over' : 'side'"
+    [opened]="(isHandset$ | async) === false"
+  >
+    <mat-toolbar>
+      <fa-icon [icon]="faBox" class="sidenav__box-icon"></fa-icon>
+    </mat-toolbar>
+    <mat-nav-list>
+      <a color="accent" mat-list-item href="/track">
+        <span class="sidenav__link-text">Search</span>
+        <fa-icon [icon]="faSearch"></fa-icon
+      ></a>
+      <a mat-list-item href="/history"
+        ><span class="sidenav__link-text">History</span>
+        <fa-icon [icon]="faHistory"></fa-icon
+      ></a>
+    </mat-nav-list>
+  </mat-sidenav>
+  <mat-sidenav-content>
+    <mat-toolbar color="primary" class="page__toolbar">
+      <!--      Button to open/close sidebar in case we want that functionality -->
+      <!--      <button-->
+      <!--        type="button"-->
+      <!--        aria-label="Toggle sidenav"-->
+      <!--        mat-icon-button-->
+      <!--        (click)="drawer.toggle()">-->
+      <!--        <mat-icon aria-label="Side nav toggle icon">menu</mat-icon>-->
+      <!--      </button>-->
+      <span class="sidenav-container__title">Tracking app</span>
+      <span class="page__toolbar-spacer"></span>
+      <div class="page__toolbar-menu" *ngIf="isLoggedIn">
+        <button
+          mat-button
+          [matMenuTriggerFor]="menu"
+          class="page__toolbar-menu-btn"
+        >
+          Menu
+        </button>
+        <mat-menu #menu="matMenu">
+          <button mat-menu-item (click)="logout()">Log out</button>
+        </mat-menu>
+      </div>
+    </mat-toolbar>
+    <ng-content></ng-content>
+  </mat-sidenav-content>
+</mat-sidenav-container>
