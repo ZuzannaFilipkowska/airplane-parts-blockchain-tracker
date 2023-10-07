@@ -8,6 +8,6 @@ public class AssetJSON {
     String objectType;
     String assetID;
     String publicDescription;
+    Boolean isForSale;
     String ownerOrg;
-
 }

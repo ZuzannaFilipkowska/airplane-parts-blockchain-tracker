@@ -170,7 +170,7 @@ public class NetworkController {
   @PostMapping("/parts")
   public ResponseEntity<String> addPart(@RequestBody CreateAssetRequest request) throws GatewayException, CommitException, IOException {
     //  AssetPrivateData data = new AssetPrivateData("asset_properties", "color", 10L); przyklad <= to wlasnie ta klase trzeba zedytowac i jej pochodne
-    return ResponseEntity.created(URI.create("")).body(createAsset(request.getPublicDescription(), request.getPrivateData()));
+    return ResponseEntity.created(URI.create("")).body(createAsset(request.getPublicDescription(), request.getIsForSale(), request.getPrivateData()));
   }
 
   @GetMapping("/parts/{id}")
@@ -194,37 +194,31 @@ public class NetworkController {
               HttpStatus.NOT_FOUND, "Asset Not Found", e);
     }
   }
+//
+//
+//  @PutMapping("/parts/{id}")
+//  public ResponseEntity<String> changePublicDescription(@PathVariable String id, @RequestBody CreateAssetRequest request) throws GatewayException, CommitException, IOException {
+//    // @TODO
+//    return ResponseEntity.created(URI.create("")).body(createAsset(request.getPublicDescription(), request.getPrivateData()));
+//  }
+//
+//  @PutMapping("/market/{id}/owner")
+//  public ResponseEntity<String> agreeToSell(@PathVariable String id, @RequestBody CreateAssetRequest request) throws GatewayException, CommitException, IOException {
+//    // @TODO
+//    return ;
+//  }
 
+//  @GetMapping("/market/{id}")
+//  public ResponseEntity<String> verifyAssetProperties(@PathVariable String id, @RequestBody CreateAssetRequest request) throws GatewayException, CommitException, IOException {
+//    // @TODO
+//    return ResponseEntity.created(URI.create("")).body(createAsset(request.getPublicDescription(), request.getPrivateData()));
+//  }
 
-  @PutMapping("/parts/{id}")
-  public ResponseEntity<String> changePublicDescription(@PathVariable String id, @RequestBody CreateAssetRequest request) throws GatewayException, CommitException, IOException {
-    // @TODO
-    return ResponseEntity.created(URI.create("")).body(createAsset(request.getPublicDescription(), request.getPrivateData()));
-  }
-
-  @PutMapping("/market/{id}/owner")
-  public ResponseEntity<String> agreeToSell(@PathVariable String id, @RequestBody CreateAssetRequest request) throws GatewayException, CommitException, IOException {
-    // @TODO
-    return ResponseEntity.created(URI.create("")).body(createAsset(request.getPublicDescription(), request.getPrivateData()));
-  }
-
-  @GetMapping("/market/{id}")
-  public ResponseEntity<String> verifyAssetProperties(@PathVariable String id, @RequestBody CreateAssetRequest request) throws GatewayException, CommitException, IOException {
-    // @TODO
-    return ResponseEntity.created(URI.create("")).body(createAsset(request.getPublicDescription(), request.getPrivateData()));
-  }
-  // @TODO ZMIENIĆ MODEL DANYCH
-  // @TODO UPDATE ZROBIC ALBO CHOCIAZ CZESCIOWY
-  // @TODO JAK DZIALA DELETE?
-  // @TODO POBRANIE HISTORII
-  // @TODO SPRZEDAŻ
-
-
-  @PutMapping("/market/{id}/owner")
-  public ResponseEntity<String> agreeToBuy(@PathVariable String id, @RequestBody CreateAssetRequest request) throws GatewayException, CommitException, IOException {
-    // @TODO
-    return ResponseEntity.created(URI.create("")).body(createAsset(request.getPublicDescription(), request.getPrivateData()));
-  }
+//  @PutMapping("/market/{id}/owner")
+//  public ResponseEntity<String> agreeToBuy(@PathVariable String id, @RequestBody CreateAssetRequest request) throws GatewayException, CommitException, IOException {
+//    // @TODO
+//    return ResponseEntity.created(URI.create("")).body(createAsset(request.getPublicDescription(), request.getPrivateData()));
+//  }
 
   // i jeszcze zgodnie z gaetway w ts:
   //  getAssetSalesPrice
@@ -257,12 +251,14 @@ public class NetworkController {
    * Submit a transaction synchronously, blocking until it has been committed to
    * the ledger.
    */
-  private String createAsset(String publicDescription, AssetPrivateData privateData) throws GatewayException, CommitException, IOException {
+  private String createAsset(String publicDescription, Boolean isForSale, AssetPrivateData privateData) throws GatewayException, CommitException, IOException {
     System.out.println("\n--> Submit Transaction: CreateAsset, creates new asset");
 
-    AssetPropertiesJSON assetPropertiesJSON = new AssetPropertiesJSON("asset_properties", privateData.getColor(), privateData.getSize(), "a94a8fe5ccb19ba61c4c0873d391e987982fbbd3"); // ?
+    AssetPropertiesJSON assetPropertiesJSON = new AssetPropertiesJSON("asset_properties", "a94a8fe5ccb19ba61c4c0873d391e987982fbbd3", privateData.getPartName(),
+            privateData.getPartNumber(), privateData.getDescription(), privateData.getManufacturer(), privateData.getLength(), privateData.getWidth(), privateData.getHeight(), privateData.getStatus(),
+            privateData.getLastInspectionDate(), privateData.getInspectionPerformedBy(), privateData.getNextInspectionDate(), privateData.getLifeLimit(), privateData.getCurrentUsageTimes()); // ?
     byte[] resultBytes = contract.newProposal("CreateAsset")
-            .addArguments(publicDescription)
+            .addArguments(publicDescription.getBytes(), isForSale.toString().getBytes())
             .putTransient("asset_properties",  assetPropertiesJSON.toString())
             .build()
             .endorse()

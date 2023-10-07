@@ -8,4 +8,5 @@ import lombok.Data;
 public class CreateAssetRequest {
     AssetPrivateData privateData;
     String publicDescription;
+    Boolean isForSale;
 }
