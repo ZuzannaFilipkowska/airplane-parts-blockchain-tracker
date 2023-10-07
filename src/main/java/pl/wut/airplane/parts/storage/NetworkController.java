@@ -7,9 +7,7 @@ import io.grpc.ManagedChannel;
 import io.grpc.netty.shaded.io.grpc.netty.GrpcSslContexts;
 import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.ObjectOutputStream;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -33,13 +31,14 @@ import org.hyperledger.fabric.client.identity.Identity;
 import org.hyperledger.fabric.client.identity.Signer;
 import org.hyperledger.fabric.client.identity.Signers;
 import org.hyperledger.fabric.client.identity.X509Identity;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
+import pl.wut.airplane.parts.storage.model.AssetJSON;
 import pl.wut.airplane.parts.storage.model.AssetPrivateData;
 import pl.wut.airplane.parts.storage.model.AssetPropertiesJSON;
+import pl.wut.airplane.parts.storage.model.CreateAssetRequest;
 
 @RestController
 public class NetworkController {
@@ -73,8 +72,8 @@ public class NetworkController {
   private static final Path TLS_CERT_PATH_Org2  = CRYPTO_PATH_Org1.resolve(Paths.get("peers/peer0.org2.example.com/tls/ca.crt")); // czy jest peer0?
 
   // Gateway peer end point.
-  private static final String PEER_ENDPOINT_Org1 = "localhost:7051";
-  private static final String PEER_ENDPOINT_Org2 = "localhost:9051";
+  private static final String PEER_ENDPOINT_Org1 = "localhost:7051"; // ??
+  private static final String PEER_ENDPOINT_Org2 = "localhost:9051"; // ??
 
   private static final String OVERRIDE_AUTH_Org1 = "peer0.org1.example.com";
   private static final String OVERRIDE_AUTH_Org2 = "peer0.org2.example.com";
@@ -101,7 +100,7 @@ public class NetworkController {
     return new X509Identity(mspId, certificate);
   }
 
-  // ta funckcja pobiera dane organizacji
+  // ta funkcja pobiera dane organizacji
   private static Signer newSigner(String privateKeyDirPath) throws IOException, InvalidKeyException {
     var keyReader = Files.newBufferedReader(getPrivateKeyPath(privateKeyDirPath));
     var privateKey = Identities.readPrivateKey(keyReader);
@@ -128,14 +127,17 @@ public class NetworkController {
         .submitOptions(options -> options.withDeadlineAfter(5, TimeUnit.SECONDS))
         .commitStatusOptions(options -> options.withDeadlineAfter(1, TimeUnit.MINUTES));
 
+    // @TODO FLOW: Chaincode mam w Go -> mam gateway tylko w ts -> musze napisac na bazie tego odpowiednie funkcje w springu, to co mam w springu to jest basic asset transfer
     // 1. zmienic nazwy na gateway 1 itd
-    // 2. ogarnac cos w rodzaju init ledger
-    // 3. sprobowac to wywolac
+    // 2.
     // 4. sprobowac wywolad istniejace read one
-    // 5. dopisac do chaincode read all
     // w tym momencie by byla opcja pobierania wszystkich i pojedynczych to juz mozna z tym dzialac
     // 6. zmienic model na lotniczy ;)
     // 7. dalej by byly potrzebne endpointy do spedzay lub edycji
+    // 10. posprzatac
+    // 11. dane init, readme
+    // 12. uzyc serwisu
+    // 13. usunac niuzywane klasy
 
     try (var gateway = builder.connect()) {
       // Get a network instance representing the channel where the smart contract is
@@ -153,23 +155,6 @@ public class NetworkController {
     }
   }
 
-  @GetMapping("/parts")
-  public ResponseEntity<byte[]> getAllParts() throws GatewayException {
-    return ResponseEntity.ok(getAllAssets());
-  }
-
-  @GetMapping("/parts/{id}")
-  public String getAssetById(@PathVariable String id) throws GatewayException {
-    readAssetById(id);
-    return "ok";
-  }
-
-  @PostMapping("/parts")
-  public ResponseEntity<String> addPart() throws GatewayException, CommitException, IOException {
-    AssetPrivateData data = new AssetPrivateData("asset_properties", "color", 10L);
-    return ResponseEntity.created(URI.create("")).body(createAsset("owner org", "pub desc", data));
-  }
-
   private void initLedger() throws EndorseException, SubmitException, CommitStatusException, CommitException {
     System.out.println("\n--> Submit Transaction: InitLedger, function creates the initial set of assets on the ledger");
 
@@ -177,6 +162,74 @@ public class NetworkController {
 
     System.out.println("*** Transaction committed successfully");
   }
+
+  @GetMapping("/parts")
+  public ResponseEntity<byte[]> getAllParts() throws GatewayException {
+    return ResponseEntity.ok(getAllAssets());
+  }
+  @PostMapping("/parts")
+  public ResponseEntity<String> addPart(@RequestBody CreateAssetRequest request) throws GatewayException, CommitException, IOException {
+    //  AssetPrivateData data = new AssetPrivateData("asset_properties", "color", 10L); przyklad <= to wlasnie ta klase trzeba zedytowac i jej pochodne
+    return ResponseEntity.created(URI.create("")).body(createAsset(request.getPublicDescription(), request.getPrivateData()));
+  }
+
+  @GetMapping("/parts/{id}")
+  public ResponseEntity<byte[]> getAssetById(@PathVariable String id) {
+    try {
+      return ResponseEntity.ok(readAssetById(id));
+    }
+    catch (Exception e) {
+      throw new ResponseStatusException(
+              HttpStatus.NOT_FOUND, "Asset Not Found", e);
+    }
+  }
+
+  @GetMapping("/parts/{id}/details")
+  public ResponseEntity<byte[]> getPrivateAssetDetailsById(@PathVariable String id) {
+    try {
+      return ResponseEntity.ok(readAssetById(id));
+    }
+    catch (Exception e) {
+      throw new ResponseStatusException(
+              HttpStatus.NOT_FOUND, "Asset Not Found", e);
+    }
+  }
+
+
+  @PutMapping("/parts/{id}")
+  public ResponseEntity<String> changePublicDescription(@PathVariable String id, @RequestBody CreateAssetRequest request) throws GatewayException, CommitException, IOException {
+    // @TODO
+    return ResponseEntity.created(URI.create("")).body(createAsset(request.getPublicDescription(), request.getPrivateData()));
+  }
+
+  @PutMapping("/market/{id}/owner")
+  public ResponseEntity<String> agreeToSell(@PathVariable String id, @RequestBody CreateAssetRequest request) throws GatewayException, CommitException, IOException {
+    // @TODO
+    return ResponseEntity.created(URI.create("")).body(createAsset(request.getPublicDescription(), request.getPrivateData()));
+  }
+
+  @GetMapping("/market/{id}")
+  public ResponseEntity<String> verifyAssetProperties(@PathVariable String id, @RequestBody CreateAssetRequest request) throws GatewayException, CommitException, IOException {
+    // @TODO
+    return ResponseEntity.created(URI.create("")).body(createAsset(request.getPublicDescription(), request.getPrivateData()));
+  }
+  // @TODO ZMIENIĆ MODEL DANYCH
+  // @TODO UPDATE ZROBIC ALBO CHOCIAZ CZESCIOWY
+  // @TODO JAK DZIALA DELETE?
+  // @TODO POBRANIE HISTORII
+  // @TODO SPRZEDAŻ
+
+
+  @PutMapping("/market/{id}/owner")
+  public ResponseEntity<String> agreeToBuy(@PathVariable String id, @RequestBody CreateAssetRequest request) throws GatewayException, CommitException, IOException {
+    // @TODO
+    return ResponseEntity.created(URI.create("")).body(createAsset(request.getPublicDescription(), request.getPrivateData()));
+  }
+
+  // i jeszcze zgodnie z gaetway w ts:
+  //  getAssetSalesPrice
+  //  getAssetBidPrice
+  //  transferAsset
 
   /**
    * Evaluate a transaction to query ledger state.
@@ -204,13 +257,13 @@ public class NetworkController {
    * Submit a transaction synchronously, blocking until it has been committed to
    * the ledger.
    */
-  private String createAsset(String ownerOrg, String publicDescription, AssetPrivateData privateData) throws GatewayException, CommitException, IOException {
+  private String createAsset(String publicDescription, AssetPrivateData privateData) throws GatewayException, CommitException, IOException {
     System.out.println("\n--> Submit Transaction: CreateAsset, creates new asset");
 
     AssetPropertiesJSON assetPropertiesJSON = new AssetPropertiesJSON("asset_properties", privateData.getColor(), privateData.getSize(), "a94a8fe5ccb19ba61c4c0873d391e987982fbbd3"); // ?
     byte[] resultBytes = contract.newProposal("CreateAsset")
             .addArguments(publicDescription)
-            .putTransient("asset_properties",  assetPropertiesJSON.toString()) // ?
+            .putTransient("asset_properties",  assetPropertiesJSON.toString())
             .build()
             .endorse()
             .submit();
@@ -222,22 +275,35 @@ public class NetworkController {
     return assetID;
   }
 
-  private byte[] convertToBytes(Object object) throws IOException {
-    try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
-         ObjectOutputStream out = new ObjectOutputStream(bos)) {
-      out.writeObject(object);
-      return bos.toByteArray();
-    }
-  }
-
-  private void readAssetById(String assetId) throws GatewayException {
+  private byte[] readAssetById(String assetId) throws GatewayException {
     System.out.println("\n--> Evaluate Transaction: ReadAsset, function returns asset attributes");
 
     var evaluateResult = contract.evaluateTransaction("ReadAsset", assetId);
 
     System.out.println("*** Result:" + prettyJson(evaluateResult));
+
+    return evaluateResult;
   }
 
+  private byte[] readAssetDetailsById(String assetId) throws GatewayException {
+    System.out.println("\n--> Evaluate Transaction: GetAssetPrivateProperties, function returns private asset attributes");
+
+    var evaluateResult = contract.evaluateTransaction("GetAssetPrivateProperties", assetId);
+
+    System.out.println("*** Result:" + prettyJson(evaluateResult));
+
+    return evaluateResult;
+  }
+
+//  private byte[] convertToBytes(Object object) throws IOException {
+//    try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
+//         ObjectOutputStream out = new ObjectOutputStream(bos)) {
+//      out.writeObject(object);
+//      return bos.toByteArray();
+//    }
+//  }
+
+  // @todo TU MNIE JESZCZE NIE BYLO
   /**
    * Submit transaction asynchronously, allowing the application to process the
    * smart contract response (e.g. update a UI) while waiting for the commit
