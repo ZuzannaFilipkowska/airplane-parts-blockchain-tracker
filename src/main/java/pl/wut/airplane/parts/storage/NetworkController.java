@@ -35,12 +35,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
-import pl.wut.airplane.parts.storage.model.AssetJSON;
-import pl.wut.airplane.parts.storage.model.AssetPrivateData;
-import pl.wut.airplane.parts.storage.model.AssetPropertiesJSON;
-import pl.wut.airplane.parts.storage.model.CreateAssetRequest;
+import pl.wut.airplane.parts.storage.model.*;
 
 @RestController
+@CrossOrigin
 public class NetworkController {
   // dane kanalu i sieci
   private static final String CHANNEL_NAME = System.getenv().getOrDefault("CHANNEL_NAME", "mychannel");
@@ -187,13 +185,38 @@ public class NetworkController {
   @GetMapping("/parts/{id}/details")
   public ResponseEntity<byte[]> getPrivateAssetDetailsById(@PathVariable String id) {
     try {
-      return ResponseEntity.ok(readAssetById(id));
+      return ResponseEntity.ok(readAssetDetailsById(id));
     }
     catch (Exception e) {
       throw new ResponseStatusException(
               HttpStatus.NOT_FOUND, "Asset Not Found", e);
     }
   }
+
+  // 1. Endpoint do pobrania tylko rekordow na sprzedaz => filtrowane getAll
+
+  @GetMapping("/parts")
+  public ResponseEntity<byte[]> getAllPartsForSale() throws GatewayException {
+    ArrayList<Asset> assets = getAllAssets();
+    return ResponseEntity.ok(getAllAssets());
+  }
+
+  // 2.Endpoint do wystawienia na sprzedaż => potrzebny apdejt rejestru, analogia do changePublicDescription
+
+  @PutMapping("/parts/{id}/price")
+  public ResponseEntity<String> agreeToSell(@PathVariable String id, Long price) throws GatewayException, CommitException, IOException {
+    // @TODO
+    return ;
+  }
+
+
+  // 3. W ogole endpoint do edycji sie przyda ;)
+
+  // 4. Agree to sell by org1 przyjmujace cene, zawiera losowe tradeId (AgreeToSell)
+
+  // 5. Agree to buy
+
+  // 6. Transfer
 //
 //
 //  @PutMapping("/parts/{id}")
@@ -202,11 +225,7 @@ public class NetworkController {
 //    return ResponseEntity.created(URI.create("")).body(createAsset(request.getPublicDescription(), request.getPrivateData()));
 //  }
 //
-//  @PutMapping("/market/{id}/owner")
-//  public ResponseEntity<String> agreeToSell(@PathVariable String id, @RequestBody CreateAssetRequest request) throws GatewayException, CommitException, IOException {
-//    // @TODO
-//    return ;
-//  }
+
 
 //  @GetMapping("/market/{id}")
 //  public ResponseEntity<String> verifyAssetProperties(@PathVariable String id, @RequestBody CreateAssetRequest request) throws GatewayException, CommitException, IOException {

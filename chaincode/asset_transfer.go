@@ -44,13 +44,6 @@ type receipt struct {
 	timestamp time.Time
 }
 
-type PrivateAssetData struct {
-	ObjectType        string `json:"objectType"` // ObjectType is used to distinguish different object types in the same chaincode namespace
-	ID                string `json:"assetID"`
-	OwnerOrg          string `json:"ownerOrg"`
-	PublicDescription string `json:"publicDescription"`
-}
-
 // CreateAsset creates an asset, sets it as owned by the client's org and returns its id
 // the id of the asset corresponds to the hash of the properties of the asset that are  passed by transient field
 func (s *SmartContract) CreateAsset(ctx contractapi.TransactionContextInterface, publicDescription string, isForSale bool) (string, error) {
