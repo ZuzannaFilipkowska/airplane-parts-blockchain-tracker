@@ -3,11 +3,13 @@ package pl.wut.airplane.parts.storage;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonParser;
+import com.google.gson.reflect.TypeToken;
 import io.grpc.ManagedChannel;
 import io.grpc.netty.shaded.io.grpc.netty.GrpcSslContexts;
 import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder;
 
 import java.io.IOException;
+import java.lang.reflect.Type;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -17,6 +19,7 @@ import java.security.InvalidKeyException;
 import java.security.cert.CertificateException;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import org.hyperledger.fabric.client.CommitException;
@@ -193,12 +196,18 @@ public class NetworkController {
     }
   }
 
+  //0. serializacja obiektow
   // 1. Endpoint do pobrania tylko rekordow na sprzedaz => filtrowane getAll
 
-  @GetMapping("/parts")
-  public ResponseEntity<byte[]> getAllPartsForSale() throws GatewayException {
-    ArrayList<Asset> assets = getAllAssets();
-    return ResponseEntity.ok(getAllAssets());
+  @GetMapping("/parts?sale=true")
+  public ResponseEntity<List<Asset>> getAllPartsForSale() throws GatewayException {
+    Gson gson = new Gson();
+
+    // 1. JSON file to Java object
+    Type listType = new TypeToken<ArrayList<Asset>>(){}.getType();
+    List<Asset> objects = gson.fromJson(prettyJson(getAllAssets()), listType);
+
+    return ResponseEntity.ok(objects);
   }
 
   // 2.Endpoint do wystawienia na sprzedaż => potrzebny apdejt rejestru, analogia do changePublicDescription
