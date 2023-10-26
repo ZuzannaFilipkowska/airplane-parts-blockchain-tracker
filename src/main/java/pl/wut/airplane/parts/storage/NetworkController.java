@@ -21,6 +21,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import org.hyperledger.fabric.client.CommitException;
 import org.hyperledger.fabric.client.CommitStatusException;
@@ -164,10 +165,10 @@ public class NetworkController {
     System.out.println("*** Transaction committed successfully");
   }
 
-  @GetMapping("/parts")
-  public ResponseEntity<byte[]> getAllParts() throws GatewayException {
-    return ResponseEntity.ok(getAllAssets());
-  }
+//  @GetMapping("/parts")
+//  public ResponseEntity<byte[]> getAllParts() throws GatewayException {
+//    return ResponseEntity.ok(getAllAssets());
+//  }
   @PostMapping("/parts")
   public ResponseEntity<String> addPart(@RequestBody CreateAssetRequest request) throws GatewayException, CommitException, IOException {
     //  AssetPrivateData data = new AssetPrivateData("asset_properties", "color", 10L); przyklad <= to wlasnie ta klase trzeba zedytowac i jej pochodne
@@ -199,24 +200,23 @@ public class NetworkController {
   //0. serializacja obiektow
   // 1. Endpoint do pobrania tylko rekordow na sprzedaz => filtrowane getAll
 
-  @GetMapping("/parts?sale=true")
+  @GetMapping("/parts/sale")
   public ResponseEntity<List<Asset>> getAllPartsForSale() throws GatewayException {
     Gson gson = new Gson();
-
-    // 1. JSON file to Java object
     Type listType = new TypeToken<ArrayList<Asset>>(){}.getType();
     List<Asset> objects = gson.fromJson(prettyJson(getAllAssets()), listType);
+    List<Asset> result = objects.stream().filter(asset -> asset.getIsForSale()).collect(Collectors.toList());
 
-    return ResponseEntity.ok(objects);
+    return ResponseEntity.ok(result);
   }
 
   // 2.Endpoint do wystawienia na sprzedaż => potrzebny apdejt rejestru, analogia do changePublicDescription
 
-  @PutMapping("/parts/{id}/price")
-  public ResponseEntity<String> agreeToSell(@PathVariable String id, Long price) throws GatewayException, CommitException, IOException {
-    // @TODO
-    return ;
-  }
+//  @PutMapping("/parts/{id}/price")
+//  public ResponseEntity<String> agreeToSell(@PathVariable String id, Long price) throws GatewayException, CommitException, IOException {
+//    // @TODO
+//    return ;
+//  }
 
 
   // 3. W ogole endpoint do edycji sie przyda ;)
