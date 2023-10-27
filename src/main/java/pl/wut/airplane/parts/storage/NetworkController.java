@@ -20,6 +20,7 @@ import java.security.cert.CertificateException;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -67,7 +68,7 @@ public class NetworkController {
   // Path to crypto materials.
   private static final Path CRYPTO_PATH_Org2  = Paths.get("../../test-network/organizations/peerOrganizations/org2.example.com");
   // Path to user certificate.
-  private static final Path CERT_PATH_Org2 = CRYPTO_PATH_Org2.resolve(Paths.get("users/User1@org2.example.com/msp/signcerts/cert.pem"));
+  private static final Path CERT_PATH_Org2 = CRYPTO_PATH_Org2.resolve(Paths.get("users/User1@org2.example.com/msp/signcerts/User1@org2.example.com-cert.pem"));
   // Path to user private key directory.
   private static final Path KEY_DIR_PATH_Org2  = CRYPTO_PATH_Org1.resolve(Paths.get("users/User1@org2.example.com/msp/keystore"));
   // Path to peer tls certificate.
@@ -79,6 +80,8 @@ public class NetworkController {
 
   private static final String OVERRIDE_AUTH_Org1 = "peer0.org1.example.com";
   private static final String OVERRIDE_AUTH_Org2 = "peer0.org2.example.com";
+
+  // current
 
 
   // nie wiem co to ;)
@@ -197,8 +200,8 @@ public class NetworkController {
     }
   }
 
-  //0. serializacja obiektow
-  // 1. Endpoint do pobrania tylko rekordow na sprzedaz => filtrowane getAll
+  //0. serializacja obiektow - DONE
+  // 1. Endpoint do pobrania tylko rekordow na sprzedaz => filtrowane getAll - DONE
 
   @GetMapping("/parts/sale")
   public ResponseEntity<List<Asset>> getAllPartsForSale() throws GatewayException {
@@ -210,24 +213,91 @@ public class NetworkController {
     return ResponseEntity.ok(result);
   }
 
-  // 2.Endpoint do wystawienia na sprzedaż => potrzebny apdejt rejestru, analogia do changePublicDescription
+  // 2.Endpoint do wystawienia na sprzedaż => potrzebny apdejt rejestru, analogia do changePublicDescription tylko ja chce zeby
+  // pole isForSale sie ustawilo a nie public description
 
-//  @PutMapping("/parts/{id}/price")
-//  public ResponseEntity<String> agreeToSell(@PathVariable String id, Long price) throws GatewayException, CommitException, IOException {
-//    // @TODO
-//    return ;
-//  }
+  @PatchMapping("/parts/{id}/details")
+  public ResponseEntity<byte[]> changeAssetForSale(@PathVariable String id) {
+    try {
+      System.out.println("\n--> Submit Transaction: setForSale");
+
+      byte[] resultBytes = contract.newProposal("SetAssetForSale")
+              .addArguments(id, String.valueOf(true))
+              .setEndorsingOrganizations(MSP_ID_Org1)
+              //.putTransient("asset_properties",  assetPropertiesJSON.toString())
+              .build()
+              .endorse()
+              .submit();
+
+      String assetID = prettyJson(resultBytes); // decode to utf
+
+      System.out.println("*** Transaction committed successfully");
+    }
+    catch (Exception e) {
+      throw new ResponseStatusException(
+              HttpStatus.NOT_FOUND, "Asset Not Found", e);
+    }
+      return ResponseEntity.ok().build();
+  }
+
+  // 3. Agree to sell by org1 przyjmujace cene, zawiera losowe tradeId (AgreeToSell)
+    @PatchMapping("/parts/{id}/price")
+  public ResponseEntity<String> agreeToSell(@PathVariable String id, Long price) throws GatewayException, CommitException, IOException {
+      try {
+        System.out.println("\n--> Submit Transaction: AgreeToSell");
+
+        int leftLimit = 48; // numeral '0'
+        int rightLimit = 122; // letter 'z'
+        int targetStringLength = 10;
+        Random random = new Random();
+
+        String generatedString = random.ints(leftLimit, rightLimit + 1)
+                .filter(i -> (i <= 57 || i >= 65) && (i <= 90 || i >= 97))
+                .limit(targetStringLength)
+                .collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)
+                .toString();
+
+        AssetPriceJSON assetPriceJSON = new AssetPriceJSON(id, price, generatedString);
+        byte[] resultBytes = contract.newProposal("SetAssetForSale")
+                .addArguments(id, String.valueOf(true))
+                .setEndorsingOrganizations(MSP_ID_Org1)
+                .putTransient("asset_price",  assetPriceJSON.toString())
+                .build()
+                .endorse()
+                .submit();
+
+        String assetID = prettyJson(resultBytes); // decode to utf
+
+        System.out.println("*** Transaction committed successfully");
+      }
+      catch (Exception e) {
+        throw new ResponseStatusException(
+                HttpStatus.NOT_FOUND, "Asset Not Found", e);
+      }
+      return ResponseEntity.ok().build();
+  }
 
 
-  // 3. W ogole endpoint do edycji sie przyda ;)
+  // 3.5 Dodanie params na obie org
+  // 3.6 Weryfikacja czy faktycznie moge cos zrobic jako org 2
 
-  // 4. Agree to sell by org1 przyjmujace cene, zawiera losowe tradeId (AgreeToSell)
+  // 4. Agree to buy as org 2
 
-  // 5. Agree to buy
+  // 5. Transfer
 
-  // 6. Transfer
-//
-//
+  // 6. W ogole endpoint do edycji sie przyda ;)
+
+  // 7. Enpoint na pobranie historii
+
+  // 8. podpiac baze danych i basic auth
+
+  // 9. podpiac frontend
+
+  // 10. testy
+
+
+
+// @TODO: Tego na razie nie potrzebuje, ale spoko wzor
 //  @PutMapping("/parts/{id}")
 //  public ResponseEntity<String> changePublicDescription(@PathVariable String id, @RequestBody CreateAssetRequest request) throws GatewayException, CommitException, IOException {
 //    // @TODO
@@ -247,11 +317,6 @@ public class NetworkController {
 //    // @TODO
 //    return ResponseEntity.created(URI.create("")).body(createAsset(request.getPublicDescription(), request.getPrivateData()));
 //  }
-
-  // i jeszcze zgodnie z gaetway w ts:
-  //  getAssetSalesPrice
-  //  getAssetBidPrice
-  //  transferAsset
 
   /**
    * Evaluate a transaction to query ledger state.

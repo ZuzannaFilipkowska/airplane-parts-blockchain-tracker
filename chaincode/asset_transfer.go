@@ -110,6 +110,32 @@ func (s *SmartContract) CreateAsset(ctx contractapi.TransactionContextInterface,
 	return assetID, nil
 }
 
+func (s *SmartContract) SetAssetForSale(ctx contractapi.TransactionContextInterface, assetID string) error {
+
+	clientOrgID, err := getClientOrgID(ctx)
+	if err != nil {
+		return err
+	}
+
+	asset, err := s.ReadAsset(ctx, assetID)
+	if err != nil {
+		return fmt.Errorf("failed to get asset: %v", err)
+	}
+
+	// Auth check to ensure that client's org actually owns the asset
+	if clientOrgID != asset.OwnerOrg {
+		return fmt.Errorf("a client from %s cannot update the description of a asset owned by %s", clientOrgID, asset.OwnerOrg)
+	}
+
+	asset.IsForSale = true
+	updatedAssetJSON, err := json.Marshal(asset)
+	if err != nil {
+		return fmt.Errorf("failed to marshal asset: %v", err)
+	}
+
+	return ctx.GetStub().PutState(assetID, updatedAssetJSON)
+}
+
 // ChangePublicDescription updates the assets public description. Only the current owner can update the public description
 func (s *SmartContract) ChangePublicDescription(ctx contractapi.TransactionContextInterface, assetID string, newDescription string) error {
 
