@@ -1,7 +1,315 @@
 package pl.wut.airplane.parts.storage;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonParser;
+import com.google.gson.reflect.TypeToken;
+import io.grpc.ManagedChannel;
+import io.grpc.netty.shaded.io.grpc.netty.GrpcSslContexts;
+import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder;
+import org.hyperledger.fabric.client.*;
+import org.hyperledger.fabric.client.identity.*;
 import org.springframework.stereotype.Service;
+import pl.wut.airplane.parts.storage.model.*;
+
+import java.io.IOException;
+import java.lang.reflect.Type;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.security.InvalidKeyException;
+import java.security.cert.CertificateException;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @Service
 public class NetworkService {
+    // dane kanalu i sieci
+    private static final String CHANNEL_NAME = System.getenv().getOrDefault("CHANNEL_NAME", "mychannel");
+    private static final String CHAINCODE_NAME = System.getenv().getOrDefault("CHAINCODE_NAME", "secured");
+
+    // dane org 1
+    private static final String MSP_ID_Org1 = System.getenv().getOrDefault("MSP_ID", "Org1MSP");
+    // Path to crypto materials.
+    private static final Path CRYPTO_PATH_Org1 = Paths.get("../../test-network/organizations/peerOrganizations/org1.example.com");
+    // Path to user certificate.
+    private static final Path CERT_PATH_Org1 = CRYPTO_PATH_Org1.resolve(Paths.get("users/User1@org1.example.com/msp/signcerts/User1@org1.example.com-cert.pem"));
+    // Path to user private key directory.
+    private static final Path KEY_DIR_PATH_Org1 = CRYPTO_PATH_Org1.resolve(Paths.get("users/User1@org1.example.com/msp/keystore"));
+    // Path to peer tls certificate.
+    private static final Path TLS_CERT_PATH_Org1 = CRYPTO_PATH_Org1.resolve(Paths.get("peers/peer0.org1.example.com/tls/ca.crt"));
+
+
+
+    // dane org 2
+    private static final String MSP_ID_Org2 = System.getenv().getOrDefault("MSP_ID", "Org2MSP");
+
+    // Path to crypto materials.
+    private static final Path CRYPTO_PATH_Org2  = Paths.get("../../test-network/organizations/peerOrganizations/org2.example.com");
+    // Path to user certificate.
+    private static final Path CERT_PATH_Org2 = CRYPTO_PATH_Org2.resolve(Paths.get("users/User1@org2.example.com/msp/signcerts/User1@org2.example.com-cert.pem"));
+    // Path to user private key directory.
+    private static final Path KEY_DIR_PATH_Org2  = CRYPTO_PATH_Org2.resolve(Paths.get("users/User1@org2.example.com/msp/keystore"));
+    // Path to peer tls certificate.
+    private static final Path TLS_CERT_PATH_Org2  = CRYPTO_PATH_Org2.resolve(Paths.get("peers/peer0.org2.example.com/tls/ca.crt")); // czy jest peer0?
+
+    // Gateway peer end point.
+    private static final String PEER_ENDPOINT_Org1 = "localhost:7051";
+    private static final String PEER_ENDPOINT_Org2 = "localhost:9051";
+
+    private static final String OVERRIDE_AUTH_Org1 = "peer0.org1.example.com";
+    private static final String OVERRIDE_AUTH_Org2 = "peer0.org2.example.com";
+
+    private final Contract contractOrg1;
+    private final Contract contractOrg2;
+
+    // ?
+    private final String assetId = "asset" + Instant.now().toEpochMilli();
+    private final Gson gson = new GsonBuilder().setPrettyPrinting().create();
+
+    public NetworkService() throws CertificateException, IOException, InvalidKeyException, InterruptedException, EndorseException, CommitException, SubmitException, CommitStatusException {
+        // The gRPC client connection should be shared by all Gateway connections
+        var channelOrg1 = newGrpcConnection(TLS_CERT_PATH_Org1, PEER_ENDPOINT_Org1, OVERRIDE_AUTH_Org1);
+
+        var builderOrg1 = Gateway.newInstance().identity(newIdentity(CERT_PATH_Org1, MSP_ID_Org1)).signer(newSigner(String.valueOf(KEY_DIR_PATH_Org1))).connection(channelOrg1)
+                // Default timeouts for different gRPC calls
+                .evaluateOptions(options -> options.withDeadlineAfter(10, TimeUnit.SECONDS))
+                .endorseOptions(options -> options.withDeadlineAfter(15, TimeUnit.SECONDS))
+                .submitOptions(options -> options.withDeadlineAfter(10, TimeUnit.SECONDS))
+                .commitStatusOptions(options -> options.withDeadlineAfter(5, TimeUnit.MINUTES));
+
+        try (var gatewayOrg1 = builderOrg1.connect()) {
+            // Get a network instance representing the channel where the smart contract is
+            // deployed.
+            var networkOrg1 = gatewayOrg1.getNetwork(CHANNEL_NAME);
+
+            // Get the smart contract from the network.
+            contractOrg1 = networkOrg1.getContract(CHAINCODE_NAME);
+
+            // Initialize a set of asset data on the ledger using the chaincode 'InitLedger' function.
+            initLedger();
+        } finally {
+            // kiedy powinnam posprzatac????
+            //channel.shutdownNow().awaitTermination(5, TimeUnit.SECONDS);
+        }
+
+        var channelOrg2 = newGrpcConnection(TLS_CERT_PATH_Org2, PEER_ENDPOINT_Org2, OVERRIDE_AUTH_Org2);
+
+        var builderOrg2 = Gateway.newInstance().identity(newIdentity(CERT_PATH_Org2, MSP_ID_Org2)).signer(newSigner(String.valueOf(KEY_DIR_PATH_Org2))).connection(channelOrg2)
+                // Default timeouts for different gRPC calls
+                .evaluateOptions(options -> options.withDeadlineAfter(5, TimeUnit.SECONDS))
+                .endorseOptions(options -> options.withDeadlineAfter(15, TimeUnit.SECONDS))
+                .submitOptions(options -> options.withDeadlineAfter(5, TimeUnit.SECONDS))
+                .commitStatusOptions(options -> options.withDeadlineAfter(1, TimeUnit.MINUTES));
+
+        try (var gatewayOrg2 = builderOrg2.connect()) {
+            // Get a network instance representing the channel where the smart contract is
+            // deployed.
+            var networkOrg2 = gatewayOrg2.getNetwork(CHANNEL_NAME);
+
+            // Get the smart contract from the network.
+            contractOrg2 = networkOrg2.getContract(CHAINCODE_NAME);
+
+            // Initialize a set of asset data on the ledger using the chaincode 'InitLedger' function.
+            //initLedger();
+        } finally {
+            // kiedy powinnam posprzatac????
+            //channel.shutdownNow().awaitTermination(5, TimeUnit.SECONDS);
+        }
+    }
+
+    /**
+     * Submit a transaction synchronously, blocking until it has been committed to
+     * the ledger.
+     */
+    String createAsset(String publicDescription, Boolean isForSale, AssetPrivateData privateData) throws GatewayException, CommitException, IOException {
+        System.out.println("\n--> Submit Transaction: CreateAsset, creates new asset");
+
+        AssetPropertiesJSON assetPropertiesJSON = new AssetPropertiesJSON("asset_properties", "a94a8fe5ccb19ba61c4c0873d391e987982fbbd3", privateData.getPartName(),
+                privateData.getPartNumber(), privateData.getDescription(), privateData.getManufacturer(), privateData.getLength(), privateData.getWidth(), privateData.getHeight(), privateData.getStatus(),
+                privateData.getLastInspectionDate(), privateData.getInspectionPerformedBy(), privateData.getNextInspectionDate(), privateData.getLifeLimit(), privateData.getCurrentUsageTimes()); // ?
+        byte[] resultBytes = contractOrg1.newProposal("CreateAsset")
+                .addArguments(publicDescription.getBytes(), isForSale.toString().getBytes())
+                .putTransient("asset_properties",  assetPropertiesJSON.toString())
+                .build()
+                .endorse()
+                .submit();
+
+        String assetID = prettyJson(resultBytes); // decode to utf
+        System.out.println(String.format("id: %s", assetID));
+
+        System.out.println("*** Transaction committed successfully");
+        return assetID;
+    }
+
+    byte[] readAssetById(String assetId) throws GatewayException {
+        System.out.println(String.format("\n--> Evaluate Transaction: ReadAsset, function returns asset with id: %s attributes", assetId));
+        var evaluateResult = contractOrg1.evaluateTransaction("ReadAsset", assetId);
+
+        System.out.println("*** Result:" + prettyJson(evaluateResult));
+
+        return evaluateResult;
+    }
+
+    byte[] readAssetDetailsById(String assetId) throws GatewayException {
+        System.out.println(String.format("\n--> Evaluate Transaction: GetAssetPrivateProperties, function returns private asset with id: %s attributes", assetId));
+
+        var evaluateResult = contractOrg1.evaluateTransaction("GetAssetPrivateProperties", assetId);
+
+        System.out.println("*** Result:" + prettyJson(evaluateResult));
+
+        return evaluateResult;
+    }
+
+
+    List<Asset> getAllAssetsForSale() throws GatewayException {
+        Gson gson = new Gson();
+        Type listType = new TypeToken<ArrayList<Asset>>(){}.getType();
+        List<Asset> objects = gson.fromJson(prettyJson(getAllAssets()), listType);
+        List<Asset> result = objects.stream().filter(asset -> asset.getIsForSale()).collect(Collectors.toList());
+        return result;
+    }
+
+
+    void setAssetForSale(String id) throws EndorseException, CommitException, SubmitException, CommitStatusException {
+        System.out.println("\n--> Submit Transaction: setForSale");
+
+        byte[] resultBytes = contractOrg1.newProposal("SetAssetForSale")
+                .addArguments(id, String.valueOf(true))
+                .setEndorsingOrganizations(MSP_ID_Org1)
+                //.putTransient("asset_properties",  assetPropertiesJSON.toString())
+                .build()
+                .endorse()
+                .submit();
+
+        String assetID = prettyJson(resultBytes); // decode to utf
+
+        System.out.println("*** Transaction committed successfully");
+    }
+
+
+    void agreeToSell(String id, Long price) throws EndorseException, CommitException, SubmitException, CommitStatusException {
+        System.out.println("\n--> Submit Transaction: AgreeToSell");
+
+        int leftLimit = 48; // numeral '0'
+        int rightLimit = 122; // letter 'z'
+        int targetStringLength = 10;
+        Random random = new Random();
+
+        String generatedString = random.ints(leftLimit, rightLimit + 1)
+                .filter(i -> (i <= 57 || i >= 65) && (i <= 90 || i >= 97))
+                .limit(targetStringLength)
+                .collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)
+                .toString();
+
+        AssetPriceJSON assetPriceJSON = new AssetPriceJSON(id, price, generatedString);
+        byte[] resultBytes = contractOrg1.newProposal("AgreeToSell")
+                .addArguments(id, String.valueOf(true))
+                .setEndorsingOrganizations(MSP_ID_Org1)
+                .putTransient("asset_price",  assetPriceJSON.toString())
+                .build()
+                .endorse()
+                .submit();
+
+        String assetID = prettyJson(resultBytes); // decode to utf
+
+        System.out.println("*** Transaction committed successfully");
+    }
+
+    // ??? verify asset props
+
+    void agreeToBuy(String id, AgreeToBuyAssetRequest agreeToBuyAssetRequest) throws EndorseException, CommitException, SubmitException, CommitStatusException {
+        System.out.println("\n--> Submit Transaction: AgreeToBuy");
+
+        AssetPriceJSON assetPriceJSON = new AssetPriceJSON(agreeToBuyAssetRequest.getAssetId(), agreeToBuyAssetRequest.getPrice(), id);
+        // skad sol?
+        AssetPropertiesJSON assetPropertiesJSON = new AssetPropertiesJSON("asset_properties", "a94a8fe5ccb19ba61c4c0873d391e987982fbbd3", agreeToBuyAssetRequest.getPrivateData().getPartName(),
+                agreeToBuyAssetRequest.getPrivateData().getPartNumber(), agreeToBuyAssetRequest.getPrivateData().getDescription(), agreeToBuyAssetRequest.getPrivateData().getManufacturer(), agreeToBuyAssetRequest.getPrivateData().getLength(), agreeToBuyAssetRequest.getPrivateData().getWidth(), agreeToBuyAssetRequest.getPrivateData().getHeight(), agreeToBuyAssetRequest.getPrivateData().getStatus(),
+                agreeToBuyAssetRequest.getPrivateData().getLastInspectionDate(), agreeToBuyAssetRequest.getPrivateData().getInspectionPerformedBy(), agreeToBuyAssetRequest.getPrivateData().getNextInspectionDate(), agreeToBuyAssetRequest.getPrivateData().getLifeLimit(), agreeToBuyAssetRequest.getPrivateData().getCurrentUsageTimes()); // ?
+
+
+        byte[] resultBytes = contractOrg2.newProposal("AgreeToBuy")
+                .addArguments(assetPriceJSON.getAssetID())
+                .setEndorsingOrganizations(MSP_ID_Org2)
+                .putTransient("asset_price",  assetPriceJSON.toString())
+                .putTransient("asset_properties", assetPropertiesJSON.toString())
+                .build()
+                .endorse()
+                .submit();
+
+        String assetID = prettyJson(resultBytes); // decode to utf
+
+        System.out.println("*** Transaction committed successfully");
+    }
+
+    //====================================================================
+    // ta funkcja pobiera dane organizacji
+    private static Signer newSigner(String privateKeyDirPath) throws IOException, InvalidKeyException {
+        var keyReader = Files.newBufferedReader(getPrivateKeyPath(privateKeyDirPath));
+        var privateKey = Identities.readPrivateKey(keyReader);
+
+        return Signers.newPrivateKeySigner(privateKey);
+    }
+
+    private static Path getPrivateKeyPath(String keyDirPath) throws IOException {
+        try (var keyFiles = Files.list(Path.of(keyDirPath))) {
+            return keyFiles.findFirst().orElseThrow();
+        }
+    }
+
+    private void initLedger() throws EndorseException, SubmitException, CommitStatusException, CommitException {
+        System.out.println("\n--> Submit Transaction: InitLedger, function creates the initial set of assets on the ledger");
+
+        //contract.submitTransaction("InitLedger");
+
+        System.out.println("*** Transaction committed successfully");
+    }
+
+
+
+
+
+    /**
+     * Evaluate a transaction to query ledger state.
+     */
+    private byte[] getAllAssets() throws GatewayException {
+        System.out.println("\n--> Evaluate Transaction: GetAllAssets, function returns all the current assets on the ledger");
+
+        var result = contractOrg1.evaluateTransaction("GetAllAssets", String.valueOf(new ArrayList<>()));
+
+        System.out.println("*** Result: " + prettyJson(result));
+
+        return result;
+    }
+
+    private String prettyJson(final byte[] json) {
+        return prettyJson(new String(json, StandardCharsets.UTF_8));
+    }
+
+    private String prettyJson(final String json) {
+        var parsedJson = JsonParser.parseString(json);
+        return gson.toJson(parsedJson);
+    }
+
+    private static ManagedChannel newGrpcConnection(Path tlsCertPath, String host, String peerName) throws IOException, CertificateException {
+        var tlsCertReader = Files.newBufferedReader(tlsCertPath);
+        var tlsCert = Identities.readX509Certificate(tlsCertReader);
+
+        return NettyChannelBuilder.forTarget(host)
+                .sslContext(GrpcSslContexts.forClient().trustManager(tlsCert).build()).overrideAuthority(peerName)
+                .build();
+    }
+
+    private static Identity newIdentity(Path certPath, String mspId) throws IOException, CertificateException {
+        var certReader = Files.newBufferedReader(certPath);
+        var certificate = Identities.readX509Certificate(certReader);
+
+        return new X509Identity(mspId, certificate);
+    }
+
 }
