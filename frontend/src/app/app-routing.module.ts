@@ -9,28 +9,22 @@ const routes: Routes = [
       import('./features/login/login.module').then((m: any) => m.LoginModule),
   },
   {
-    path: 'register',
-    loadChildren: () =>
-      import('./features/register/register.module').then(
-        (m: any) => m.RegisterModule
-      ),
-  },
-  {
-    path: 'track',
+    path: 'czesci',
     loadChildren: () =>
       import('./features/tracking/tracking.module').then(
         (m: any) => m.TrackingModule
       ),
+    canActivate: [AuthGuardService],
   },
   {
-    path: 'history',
+    path: 'market',
     loadChildren: () =>
       import('./features/history/history.module').then((m) => m.HistoryModule),
     canActivate: [AuthGuardService],
   },
   {
     path: '**',
-    redirectTo: 'register',
+    redirectTo: 'czesci',
   },
 ];
 

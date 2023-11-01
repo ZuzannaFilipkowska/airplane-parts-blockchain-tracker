@@ -21,9 +21,7 @@ import java.nio.file.Paths;
 import java.security.InvalidKeyException;
 import java.security.cert.CertificateException;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -55,17 +53,6 @@ public class NetworkService {
     private static final Path KEY_DIR_PATH_Org2  = CRYPTO_PATH_Org2.resolve(Paths.get("users/User1@org2.example.com/msp/keystore"));
     // Path to peer tls certificate.
     private static final Path TLS_CERT_PATH_Org2  = CRYPTO_PATH_Org2.resolve(Paths.get("peers/peer0.org2.example.com/tls/ca.crt")); // czy jest peer0?
-
-
-    // dane current org
-    private String MSP_ID;
-
-    private Path CRYPTO_PATH;
-    private Path CERT_PATH;
-    // Path to user private key directory.
-    private Path KEY_DIR_PATH;
-    // Path to peer tls certificate.
-    private Path TLS_CERT_PATH;
 
     // Gateway peer end point.
     private static final String PEER_ENDPOINT_Org1 = "localhost:7051";
@@ -139,23 +126,26 @@ public class NetworkService {
 
         AssetPropertiesJSON assetPropertiesJSON = new AssetPropertiesJSON("asset_properties", "a94a8fe5ccb19ba61c4c0873d391e987982fbbd3", privateData.getPartName(),
                 privateData.getPartNumber(), privateData.getDescription(), privateData.getManufacturer(), privateData.getLength(), privateData.getWidth(), privateData.getHeight(), privateData.getStatus(),
-                privateData.getLastInspectionDate(), privateData.getInspectionPerformedBy(), privateData.getNextInspectionDate(), privateData.getLifeLimit(), privateData.getCurrentUsageTimes()); // ?
+                privateData.getLastInspectionDate(), privateData.getInspectionPerformedBy(), privateData.getNextInspectionDate(), privateData.getLifeLimit(), privateData.getCurrentUsageTimes());
+
+        String endorsingOrg = MSP_ID_Org1;
+
         byte[] resultBytes = contractOrg1.newProposal("CreateAsset")
                 .addArguments(publicDescription.getBytes(), isForSale.toString().getBytes())
                 .putTransient("asset_properties",  toJson(assetPropertiesJSON))
-                .setEndorsingOrganizations(MSP_ID_Org1)
+                .setEndorsingOrganizations(endorsingOrg)
                 .build()
                 .endorse()
                 .submit();
 
         String assetID = prettyJson(resultBytes); // decode to utf
+
         System.out.println(String.format("id: %s", assetID));
+
         return assetID;
     }
 
-    private String toJson(Object o) {
-        return gson.toJson(o);
-    }
+
     byte[] readAssetById(String assetId) throws GatewayException {
         System.out.println(String.format("\n--> Evaluate Transaction: ReadAsset, function returns asset with id: %s attributes", assetId));
         var evaluateResult = contractOrg1.evaluateTransaction("ReadAsset", assetId);
@@ -188,9 +178,11 @@ public class NetworkService {
     void setAssetForSale(String id) throws EndorseException, CommitException, SubmitException, CommitStatusException {
         System.out.println("\n--> Submit Transaction: setForSale");
 
+        String endorsingOrg = MSP_ID_Org1;
+
         contractOrg1.newProposal("SetAssetForSale")
                 .addArguments(id, String.valueOf(true))
-                .setEndorsingOrganizations(MSP_ID_Org1)
+                .setEndorsingOrganizations(endorsingOrg)
                 .build()
                 .endorse()
                 .submit();
@@ -204,9 +196,11 @@ public class NetworkService {
 
         AssetPriceJSON assetPriceJSON = new AssetPriceJSON(id, tradeId, price);
 
+        String endorsingOrg = MSP_ID_Org1;
+
         contractOrg1.newProposal("AgreeToSell")
                 .addArguments(id)
-                .setEndorsingOrganizations(MSP_ID_Org1)
+                .setEndorsingOrganizations(endorsingOrg)
                 .putTransient("asset_price",  toJson(assetPriceJSON))
                 .build()
                 .endorse()
@@ -215,7 +209,7 @@ public class NetworkService {
         System.out.println("*** Transaction committed successfully");
     }
 
-    void verifyAssetProperties(String assetId, AssetProperties assetData) throws GatewayException, CommitException {
+    void verifyAssetProperties(String assetId, AssetProperties assetData) throws GatewayException {
 
 //        int leftLimit = 48; // numeral '0'
 //        int rightLimit = 122; // letter 'z'
@@ -261,21 +255,21 @@ public class NetworkService {
         System.out.println("\n--> Submit Transaction: AgreeToBuy");
 
         AssetPriceJSON assetPriceJSON = new AssetPriceJSON(agreeToBuyAssetRequest.getAssetId(), tradeId, agreeToBuyAssetRequest.getPrice());
-        // @TODO skad sol?
+
         AssetPropertiesJSON assetPropertiesJSON = new AssetPropertiesJSON("asset_properties", "a94a8fe5ccb19ba61c4c0873d391e987982fbbd3", agreeToBuyAssetRequest.getPrivateData().getPartName(),
                 agreeToBuyAssetRequest.getPrivateData().getPartNumber(), agreeToBuyAssetRequest.getPrivateData().getDescription(), agreeToBuyAssetRequest.getPrivateData().getManufacturer(), agreeToBuyAssetRequest.getPrivateData().getLength(), agreeToBuyAssetRequest.getPrivateData().getWidth(), agreeToBuyAssetRequest.getPrivateData().getHeight(), agreeToBuyAssetRequest.getPrivateData().getStatus(),
                 agreeToBuyAssetRequest.getPrivateData().getLastInspectionDate(), agreeToBuyAssetRequest.getPrivateData().getInspectionPerformedBy(), agreeToBuyAssetRequest.getPrivateData().getNextInspectionDate(), agreeToBuyAssetRequest.getPrivateData().getLifeLimit(), agreeToBuyAssetRequest.getPrivateData().getCurrentUsageTimes()); // ?
 
+        String endorsingOrg = MSP_ID_Org2;
 
         contractOrg2.newProposal("AgreeToBuy")
                 .addArguments(assetPriceJSON.getAsset_id())
-                .setEndorsingOrganizations(MSP_ID_Org2)
+                .setEndorsingOrganizations(endorsingOrg)
                 .putTransient("asset_price",  toJson(assetPriceJSON))
                 .putTransient("asset_properties", toJson(assetPropertiesJSON))
                 .build()
                 .endorse()
                 .submit();
-
 
         System.out.println("*** Transaction committed successfully");
     }
@@ -339,6 +333,10 @@ public class NetworkService {
     private String prettyJson(final String json) {
         var parsedJson = JsonParser.parseString(json);
         return gson.toJson(parsedJson);
+    }
+
+    private String toJson(Object o) {
+        return gson.toJson(o);
     }
 
     private static ManagedChannel newGrpcConnection(Path tlsCertPath, String host, String peerName) throws IOException, CertificateException {
