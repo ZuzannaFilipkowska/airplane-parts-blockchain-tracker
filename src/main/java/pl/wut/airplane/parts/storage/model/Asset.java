@@ -4,7 +4,7 @@ import lombok.Data;
 
 @Data
 public class Asset {
-    String assetId;
+    String assetID;
     String publicDescription;
     Boolean isForSale;
     String ownerOrg;

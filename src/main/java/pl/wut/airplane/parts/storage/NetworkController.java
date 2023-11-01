@@ -1,28 +1,11 @@
 package pl.wut.airplane.parts.storage;
 
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
-
 import java.io.IOException;
-import java.lang.reflect.Type;
 import java.net.URI;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.security.InvalidKeyException;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
-import java.util.stream.Collectors;
 
 import org.hyperledger.fabric.client.CommitException;
-import org.hyperledger.fabric.client.CommitStatusException;
-import org.hyperledger.fabric.client.EndorseException;
 import org.hyperledger.fabric.client.GatewayException;
-import org.hyperledger.fabric.client.SubmitException;
-import org.hyperledger.fabric.client.identity.Identities;
-import org.hyperledger.fabric.client.identity.Signer;
-import org.hyperledger.fabric.client.identity.Signers;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -37,24 +20,24 @@ public class NetworkController {
 
   public NetworkController(NetworkService networkService)  {
     // @TODO FLOW: Chaincode mam w Go -> mam gateway tylko w ts -> musze napisac na bazie tego odpowiednie funkcje w springu, to co mam w springu to jest basic asset transfer
-    // 1. krok ref - pzeniesc do serwisu
+    // 1. krok ref - pzeniesc do serwisu - DONE
     // 2. ogarnac set up na dwie org
-    // 3. sprawdzic czy dzialaja te endpointy co dodalam
+    // 3. sprawdzic czy dzialaja te endpointy co dodalam -
     // 4. dopisac pozostale endpointy
     // 7. dalej by byly potrzebne endpointy do spedzay lub edycji
     // 10. posprzatac
     // 11. dane init, readme
     // 12. uzyc serwisu
     // 13. usunac niuzywane klasy
+    // 14. couch db
     this.networkService = networkService;
   }
 
+  @GetMapping("/parts/all")
+  public ResponseEntity<byte[]> getAllParts() throws GatewayException {
+    return ResponseEntity.ok(networkService.getAllAssets());
+  }
 
-
-//  @GetMapping("/parts")
-//  public ResponseEntity<byte[]> getAllParts() throws GatewayException {
-//    return ResponseEntity.ok(getAllAssets());
-//  }
   @PostMapping("/parts")
   public ResponseEntity<String> addPart(@RequestBody CreateAssetRequest request) throws GatewayException, CommitException, IOException {
     return ResponseEntity.created(URI.create("")).body(networkService.createAsset(request.getPublicDescription(), request.getIsForSale(), request.getPrivateData()));
@@ -71,7 +54,7 @@ public class NetworkController {
     }
   }
 
-  @GetMapping("/parts/{id}/details") // zepsute
+  @GetMapping("/parts/{id}/details")
   public ResponseEntity<byte[]> getPrivateAssetDetailsById(@PathVariable String id) {
     try {
       return ResponseEntity.ok(networkService.readAssetDetailsById(id));
@@ -82,17 +65,11 @@ public class NetworkController {
     }
   }
 
-  //0. serializacja obiektow - DONE
-  // 1. Endpoint do pobrania tylko rekordow na sprzedaz => filtrowane getAll - DONE
-
   @GetMapping("/parts/sale")
   public ResponseEntity<List<Asset>> getAllPartsForSale() throws GatewayException {
     List<Asset> result = networkService.getAllAssetsForSale();
     return ResponseEntity.ok(result);
   }
-
-  // 2.Endpoint do wystawienia na sprzedaż => potrzebny apdejt rejestru, analogia do changePublicDescription tylko ja chce zeby
-  // pole isForSale sie ustawilo a nie public description
 
   @PatchMapping("/parts/{id}/details")
   public ResponseEntity<byte[]> changeAssetForSale(@PathVariable String id) {
@@ -108,9 +85,9 @@ public class NetworkController {
 
   // 3. Agree to sell by org1 przyjmujace cene, zawiera losowe tradeId (AgreeToSell)
     @PatchMapping("/parts/{id}/price")
-  public ResponseEntity<String> agreeToSell(@PathVariable String id, @RequestParam Long price) throws GatewayException, CommitException, IOException {
+  public ResponseEntity<String> agreeToSell(@PathVariable String id, @RequestParam Long price, @RequestParam String tradeId) throws GatewayException, CommitException, IOException {
       try {
-      networkService.agreeToSell(id, price);
+      networkService.agreeToSell(id, price, tradeId);
       }
       catch (Exception e) {
         throw new ResponseStatusException(
@@ -120,6 +97,19 @@ public class NetworkController {
   }
 
 
+  // 3.5 Verify asset properties as org 2
+
+    @PostMapping("/parts/{assetId}")
+  public ResponseEntity<String> verifyAssetProperties(@RequestBody AssetProperties asset, @PathVariable String assetId) throws GatewayException, CommitException, IOException {
+    try {
+      networkService.verifyAssetProperties(assetId, asset);
+    }
+    catch (Exception e) {
+      throw new ResponseStatusException(
+              HttpStatus.NOT_FOUND, "Asset Not Found", e);
+    }
+    return ResponseEntity.ok().build();
+  }
   // 4. Agree to buy as org 2
 
   @PostMapping("/market/{id}")
@@ -136,8 +126,20 @@ public class NetworkController {
 
   // 5. Transfer
 
+  @PatchMapping("/parts/{id}/owner")
+  public ResponseEntity<byte[]> changeAssetOwner(@PathVariable String id, @RequestBody TransferAssetRequest request) {
+    try {
+      networkService.transferAsset(id, request.getPrice(), request.getTradeID());
+    } catch (Exception e) {
+      System.out.println(e);
+            throw new ResponseStatusException(
+              HttpStatus.NOT_FOUND, "Asset Not Found", e);
+    }
+    return ResponseEntity.ok().build();
 
-  // 3.5 Dodanie params na obie org
+  }
+
+    // 3.5 Dodanie params na obie org
   // 3.6 Weryfikacja czys zrobic jako org 2
 
   // pisanie + front + auth

@@ -22,8 +22,8 @@ type QueryResult struct {
 
 type Agreement struct {
 	ID      string `json:"asset_id"`
-	Price   int    `json:"price"`
 	TradeID string `json:"trade_id"`
+	Price   int    `json:"price"`
 }
 
 // ReadAsset returns the public asset data

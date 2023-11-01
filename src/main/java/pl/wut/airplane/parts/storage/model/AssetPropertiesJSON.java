@@ -8,7 +8,7 @@ import java.io.Serializable;
 @Data
 @AllArgsConstructor
 public class AssetPropertiesJSON implements Serializable  {
-    String objectType;
+    String object_type;
     String salt;
     String partName;
     String partNumber;

@@ -5,8 +5,7 @@ import lombok.Data;
 
 @Data
 @AllArgsConstructor
-public class AssetPriceJSON {
-    String asset_id;
-    String trade_id;
+public class TransferAssetRequest {
+    String tradeID;
     Long price;
 }
