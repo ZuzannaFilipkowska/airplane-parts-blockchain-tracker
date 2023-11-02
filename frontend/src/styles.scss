@@ -81,7 +81,8 @@ body {
 }
 
 mat-form-field .mat-form-field-wrapper .mat-form-field-flex {
-  background: #ffd369 !important;
+  background: $app-grey-light !important;
+  opacity: 0.8;
   border-radius: 0.6rem !important;
   min-width: 25rem;
   font-size: 1.6rem;

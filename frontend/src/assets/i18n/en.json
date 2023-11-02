@@ -10,9 +10,9 @@
     "noData": "No data found"
   },
   "login": {
-    "title": "Login",
-    "username": "Username",
-    "password": "Enter your password"
+    "title": "Zaloguj się",
+    "username": "Nazwa użytkownika",
+    "password": "Wprowadź hasło"
   },
   "register": {
     "title": "Register",
