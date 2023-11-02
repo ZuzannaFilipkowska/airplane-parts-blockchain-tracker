@@ -11,21 +11,23 @@ import { MatInputModule } from '@angular/material/input';
 import { ReactiveFormsModule } from '@angular/forms';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { TranslateModule } from '@ngx-translate/core';
+import {MatTableModule} from "@angular/material/table";
 
 @NgModule({
   declarations: [TrackingComponent],
-  imports: [
-    TrackingRoutingModule,
-    MatCardModule,
-    CommonModule,
-    HttpClientModule,
-    SharedModule,
-    MatInputModule,
-    MatFormFieldModule,
-    TranslateModule,
-    ReactiveFormsModule,
-    MatProgressSpinnerModule,
-  ],
+    imports: [
+        TrackingRoutingModule,
+        MatCardModule,
+        CommonModule,
+        HttpClientModule,
+        SharedModule,
+        MatInputModule,
+        MatFormFieldModule,
+        TranslateModule,
+        ReactiveFormsModule,
+        MatProgressSpinnerModule,
+        MatTableModule,
+    ],
   exports: [TrackingComponent],
   providers: [TrackingService],
 })

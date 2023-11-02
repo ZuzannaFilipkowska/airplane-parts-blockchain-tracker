@@ -1,5 +1,4 @@
 import { Component } from '@angular/core';
-import { PartsService } from './services/parts.service';
 
 @Component({
   selector: 'app-root',
@@ -9,8 +8,8 @@ import { PartsService } from './services/parts.service';
 export class AppComponent {
   title = 'frontend';
 
-  constructor(private partsService: PartsService) {
-      this.partsService.getAllParts().subscribe(data => console.log(data)
-      );
-  }
+  // constructor(private partsService: PartsService) {
+  //     this.partsService.getAllParts().subscribe(data => console.log(data)
+  //     );
+  // }
 }

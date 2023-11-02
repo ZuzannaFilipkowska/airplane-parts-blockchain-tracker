@@ -11,12 +11,12 @@
       <fa-icon [icon]="faBox" class="sidenav__box-icon"></fa-icon>
     </mat-toolbar>
     <mat-nav-list>
-      <a color="accent" mat-list-item href="/track">
-        <span class="sidenav__link-text">Search</span>
+      <a color="accent" mat-list-item  routerLink="/czesci"  routerLinkActive="mat-list-item--active" [routerLinkActiveOptions]="{exact: true}">
+        <span class="sidenav__link-text">Twoje części</span>
         <fa-icon [icon]="faSearch"></fa-icon
       ></a>
-      <a mat-list-item href="/history"
-        ><span class="sidenav__link-text">History</span>
+      <a mat-list-item routerLink="/market"  routerLinkActive="mat-list-item--active" [routerLinkActiveOptions]="{exact: true}"
+      ><span class="sidenav__link-text">Market części</span>
         <fa-icon [icon]="faHistory"></fa-icon
       ></a>
     </mat-nav-list>
@@ -31,7 +31,7 @@
       <!--        (click)="drawer.toggle()">-->
       <!--        <mat-icon aria-label="Side nav toggle icon">menu</mat-icon>-->
       <!--      </button>-->
-      <span class="sidenav-container__title">Tracking app</span>
+      <span class="sidenav-container__title">Magazyn danych blockchain</span>
       <span class="page__toolbar-spacer"></span>
       <div class="page__toolbar-menu" *ngIf="isLoggedIn">
         <button
@@ -42,7 +42,7 @@
           Menu
         </button>
         <mat-menu #menu="matMenu">
-          <button mat-menu-item (click)="logout()">Log out</button>
+          <button mat-menu-item (click)="logout()">Wyloguj</button>
         </mat-menu>
       </div>
     </mat-toolbar>

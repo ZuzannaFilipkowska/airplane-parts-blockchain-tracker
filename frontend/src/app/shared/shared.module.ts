@@ -10,21 +10,24 @@ import { MatListModule } from '@angular/material/list';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
+import {RouterLinkActive, RouterLinkWithHref} from "@angular/router";
 
 @NgModule({
   declarations: [PageComponent],
-  imports: [
-    CommonModule,
-    LayoutModule,
-    MatToolbarModule,
-    MatButtonModule,
-    MatSidenavModule,
-    MatIconModule,
-    MatListModule,
-    MatMenuModule,
-    MatSnackBarModule,
-    FontAwesomeModule,
-  ],
+    imports: [
+        CommonModule,
+        LayoutModule,
+        MatToolbarModule,
+        MatButtonModule,
+        MatSidenavModule,
+        MatIconModule,
+        MatListModule,
+        MatMenuModule,
+        MatSnackBarModule,
+        FontAwesomeModule,
+        RouterLinkWithHref,
+        RouterLinkActive,
+    ],
   exports: [PageComponent],
 })
 export class SharedModule {}

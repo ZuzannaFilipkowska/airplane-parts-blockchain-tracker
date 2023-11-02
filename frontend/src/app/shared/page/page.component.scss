@@ -4,29 +4,32 @@
   height: 100%;
 
   &__title {
-    color: $app-color-yellow;
+    color: $app-blue-dark;
   }
 }
 
 .sidenav {
-  width: 11rem;
-  background: #222831;
+  width: 12rem;
+  background: $app-white;
+  padding: 0 0.5rem;
 }
 
 .sidenav .mat-toolbar {
-  background: $app-color-yellow;
+  background: $app-white;
+  border-color: $app-white;
 }
 
 .mat-toolbar.mat-primary {
   position: sticky;
   top: 0;
   z-index: 1;
-  background: $app-grey-dark;
+  background: $app-white;
+  border-color: $app-white;
 }
 
 .sidenav__link-text {
   margin-right: 1rem;
-  color: $app-color-yellow;
+  color: $app-plain-white;
 }
 
 .sidenav__box-icon {
@@ -34,7 +37,7 @@
 }
 
 .mat-sidenav-content {
-  background: $app-grey-light;
+  background: $app-plain-white;
 }
 
 .page {
@@ -47,7 +50,7 @@
     }
 
     &-menu-btn {
-      background-color: $app-grey-light;
+      background-color: $app-grey-dark;
       width: 12rem;
       margin-right: 2rem;
     }

@@ -94,5 +94,14 @@ mat-card {
 
 .mat-button {
   background: $app-grey-dark;
-  color: $app-color-yellow;
+  color: $app-plain-white ;
+}
+
+.mat-list-item {
+  background: $app-grey-dark;
+  margin-top: 1rem;
+
+  &--active {
+    background-color: $app-purple-dark;
+  }
 }

@@ -1,54 +1,103 @@
 import { Component, OnInit } from '@angular/core';
 import { TrackingService } from '../../tracking.service';
-import { distinctUntilChanged, take, tap } from 'rxjs';
-import { FormControl } from '@angular/forms';
+import {AuthService} from "../../../../services/auth.service";
+import {MatTableDataSource} from "@angular/material/table";
+import {Part} from "../../../../models/part";
 
-export interface Parcel {
-  trackingId: number;
-  address: string;
-  status: string;
-}
+
+const ELEMENT_DATA: Part[] = [
+    {
+        name: 'Sensor',
+        id: 'adasdasdasd',
+        price: 100,
+        weight: 1,
+        width: 1,
+        length: 1
+    },
+    {
+        name: 'Sensor 2',
+        id: 'adasdaasdadsasd',
+        price: 100,
+        weight: 1,
+        width: 1,
+        length: 1
+    },
+    {
+        name: 'Sensor 3',
+        id: 'a2asdasdasd',
+        price: 100,
+        weight: 1,
+        width: 1,
+        length: 1
+    },
+    {
+        name: 'Sensor 4',
+        id: 'bbbbdasdasd',
+        price: 100,
+        weight: 1,
+        width: 1,
+        length: 1
+    },
+];
+
 @Component({
   selector: 'app-tracking',
   templateUrl: './tracking.component.html',
   styleUrls: ['./tracking.component.scss'],
 })
 export class TrackingComponent implements OnInit {
-  packageIdControl: FormControl<string | null> = new FormControl<string>('');
-  isLoading: boolean = false;
-  isError: boolean = false;
+  // packageIdControl: FormControl<string | null> = new FormControl<string>('');
+  // isLoading: boolean = false;
+  // isError: boolean = false;
 
-  parcel: Parcel | null = null;
+  // parcel: Parcel | null = null;
 
-  constructor(private helloWorldService: TrackingService) {}
+  // constructor(private helloWorldService: TrackingService) {}
 
-  ngOnInit(): void {
-    this.packageIdControl.valueChanges
-      .pipe(
-        distinctUntilChanged(),
-        tap((id: any) => {
-          this.isLoading = true;
-          this.helloWorldService
-            .getPackageData(<string>this.packageIdControl.value)
-            .pipe(take(1))
-            .subscribe(
-              (res: any) => {
-                this.parcel = res
-                  ? {
-                      status: res.status,
-                      address: res.address,
-                      trackingId: res.trackingNumber,
-                    }
-                  : res;
-                this.isLoading = false;
-              },
-              (error) => {
-                this.isLoading = false;
-                this.parcel = null;
-              }
-            );
-        })
-      )
-      .subscribe();
-  }
+  // ngOnInit(): void {
+  //   this.packageIdControl.valueChanges
+  //     .pipe(
+  //       distinctUntilChanged(),
+  //       tap((id: any) => {
+  //         this.isLoading = true;
+  //         this.helloWorldService
+  //           .getPackageData(<string>this.packageIdControl.value)
+  //           .pipe(take(1))
+  //           .subscribe(
+  //             (res: any) => {
+  //               this.parcel = res
+  //                 ? {
+  //                     status: res.status,
+  //                     address: res.address,
+  //                     trackingId: res.trackingNumber,
+  //                   }
+  //                 : res;
+  //               this.isLoading = false;
+  //             },
+  //             (error) => {
+  //               this.isLoading = false;
+  //               this.parcel = null;
+  //             }
+  //           );
+  //       })
+  //     )
+  //     .subscribe();
+  // }
+
+    constructor(
+        private trackingService: TrackingService,
+        private authService: AuthService
+    ) {}
+
+    ngOnInit(): void {
+        console.log(this.authService.currentUserValue);
+    }
+
+    displayedColumns: string[] = ['name', 'id', 'price', 'weight', 'width', 'length'];
+    dataSource = new MatTableDataSource(ELEMENT_DATA);
+
+    applyFilter(event: Event): void {
+        const filterValue = (event.target as HTMLInputElement).value;
+        this.dataSource.filter = filterValue.trim().toLowerCase();
+    }
 }
