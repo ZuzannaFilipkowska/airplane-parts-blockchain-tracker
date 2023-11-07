@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup } from '@angular/forms';
 import { AuthService } from '../../../services/auth.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -13,6 +13,7 @@ import {faBox} from "@fortawesome/free-solid-svg-icons";
 export class LoginComponent {
   loginForm: FormGroup;
   hide: boolean = true;
+  protected readonly faBox = faBox;
 
   constructor(
     private fb: FormBuilder,
@@ -29,15 +30,15 @@ export class LoginComponent {
   onSubmit() {
     this.authService
       .login(this.loginForm.value.username, this.loginForm.value.password)
-      .subscribe(
-        (res) => {
+      .subscribe({
+        next: () => {
           this.router.navigate(['/track']);
-          this.openSnackBar('Login successful', 'Hello');
+          this.openSnackBar('Logowanie powiodło się', 'Witaj');
         },
-        (error) => {
-          this.openSnackBar('Login failed', 'Try again');
+        error: () => {
+          this.openSnackBar('Logowanie nie udało się', 'Spróbuj ponownie');
         }
-      );
+      });
   }
 
   openSnackBar(message: string, label: string) {
@@ -45,6 +46,4 @@ export class LoginComponent {
       duration: 5000,
     });
   }
-
-    protected readonly faBox = faBox;
 }

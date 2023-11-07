@@ -11,9 +11,10 @@ import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 import {RouterLinkActive, RouterLinkWithHref} from "@angular/router";
+import { ButtonComponent } from './button/button.component';
 
 @NgModule({
-  declarations: [PageComponent],
+  declarations: [PageComponent, ButtonComponent],
     imports: [
         CommonModule,
         LayoutModule,
@@ -28,6 +29,6 @@ import {RouterLinkActive, RouterLinkWithHref} from "@angular/router";
         RouterLinkWithHref,
         RouterLinkActive,
     ],
-  exports: [PageComponent],
+  exports: [PageComponent, ButtonComponent],
 })
 export class SharedModule {}

@@ -1,16 +1,16 @@
 import { Component, OnInit } from '@angular/core';
 import { MatTableDataSource } from '@angular/material/table';
 import { Part } from '../../models/part';
-import { TrackingService } from '../tracking/tracking.service';
 import { AuthService } from '../../services/auth.service';
+import {TrackingService} from "../../services/tracking.service";
 
 
 @Component({
-  selector: 'app-history',
-  templateUrl: './history.component.html',
-  styleUrls: ['./history.component.scss'],
+  selector: 'app-market',
+  templateUrl: './market.component.html',
+  styleUrls: ['./market.component.scss'],
 })
-export class HistoryComponent implements OnInit {
+export class MarketComponent implements OnInit {
   constructor(
     private trackingService: TrackingService,
     private authService: AuthService

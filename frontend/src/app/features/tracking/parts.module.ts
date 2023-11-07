@@ -1,9 +1,7 @@
 import { NgModule } from '@angular/core';
-import { TrackingComponent } from './components/tracking/tracking.component';
-import { TrackingRoutingModule } from './tracking-routing.module';
+import { PartsRoutingModule } from './parts-routing.module';
 import { MatCardModule } from '@angular/material/card';
 import { HttpClientModule } from '@angular/common/http';
-import { TrackingService } from './tracking.service';
 import { CommonModule } from '@angular/common';
 import { SharedModule } from '../../shared/shared.module';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -12,11 +10,12 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { TranslateModule } from '@ngx-translate/core';
 import {MatTableModule} from "@angular/material/table";
+import {PartsComponent} from "./components/parts/parts.component";
 
 @NgModule({
-  declarations: [TrackingComponent],
+  declarations: [PartsComponent],
     imports: [
-        TrackingRoutingModule,
+        PartsRoutingModule,
         MatCardModule,
         CommonModule,
         HttpClientModule,
@@ -28,7 +27,6 @@ import {MatTableModule} from "@angular/material/table";
         MatProgressSpinnerModule,
         MatTableModule,
     ],
-  exports: [TrackingComponent],
-  providers: [TrackingService],
+  exports: [PartsComponent],
 })
-export class TrackingModule {}
+export class PartsModule {}

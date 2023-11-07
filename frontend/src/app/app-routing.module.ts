@@ -11,15 +11,15 @@ const routes: Routes = [
   {
     path: 'czesci',
     loadChildren: () =>
-      import('./features/tracking/tracking.module').then(
-        (m: any) => m.TrackingModule
+      import('./features/tracking/parts.module').then(
+        (m: any) => m.PartsModule
       ),
     canActivate: [AuthGuardService],
   },
   {
     path: 'market',
     loadChildren: () =>
-      import('./features/history/history.module').then((m) => m.HistoryModule),
+      import('./features/marketplace/market.module').then((m) => m.MarketModule),
     canActivate: [AuthGuardService],
   },
   {

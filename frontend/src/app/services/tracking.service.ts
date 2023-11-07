@@ -1,9 +1,11 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { environment } from '../../../environments/environment';
 import { Observable } from 'rxjs';
+import {environment} from "../../environments/environment";
 
-@Injectable()
+@Injectable({
+  providedIn: 'root'
+})
 export class TrackingService {
   public apiUrl: string = `${environment.baseUrl}`;
   httpOptions = {
@@ -14,18 +16,26 @@ export class TrackingService {
 
   constructor(private http: HttpClient) {}
 
-  testConnection(): Observable<string> {
-    return this.http.get<string>(`${this.apiUrl}/hello`, this.httpOptions);
+  getAllParts(): void {
+
   }
+
+  getPartDetails(): void {
+
+  }
+
+  addPart(): void {
+
+  }
+
+  // ew moglaby byc cala sprzedaz
+
+
 
   getPackageData(id: string): Observable<any> {
     return this.http.get<any>(
       `${this.apiUrl}/tracking/${id}`,
       this.httpOptions
     );
-  }
-
-  getPackageHistory(id: string): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}/history/${id}`, this.httpOptions);
   }
 }

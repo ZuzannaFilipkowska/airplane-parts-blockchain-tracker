@@ -1,8 +1,8 @@
 import { Component, OnInit } from '@angular/core';
-import { TrackingService } from '../../tracking.service';
 import {AuthService} from "../../../../services/auth.service";
 import {MatTableDataSource} from "@angular/material/table";
 import {Part} from "../../../../models/part";
+import {TrackingService} from "../../../../services/tracking.service";
 
 
 const ELEMENT_DATA: Part[] = [
@@ -41,11 +41,11 @@ const ELEMENT_DATA: Part[] = [
 ];
 
 @Component({
-  selector: 'app-tracking',
-  templateUrl: './tracking.component.html',
-  styleUrls: ['./tracking.component.scss'],
+  selector: 'app-parts',
+  templateUrl: './parts.component.html',
+  styleUrls: ['./parts.component.scss'],
 })
-export class TrackingComponent implements OnInit {
+export class PartsComponent implements OnInit {
   // packageIdControl: FormControl<string | null> = new FormControl<string>('');
   // isLoading: boolean = false;
   // isError: boolean = false;
