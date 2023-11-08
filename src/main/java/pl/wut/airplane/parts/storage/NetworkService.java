@@ -9,6 +9,9 @@ import io.grpc.netty.shaded.io.grpc.netty.GrpcSslContexts;
 import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder;
 import org.hyperledger.fabric.client.*;
 import org.hyperledger.fabric.client.identity.*;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import pl.wut.airplane.parts.storage.model.*;
 
@@ -129,6 +132,10 @@ public class NetworkService {
                 privateData.getLastInspectionDate(), privateData.getInspectionPerformedBy(), privateData.getNextInspectionDate(), privateData.getLifeLimit(), privateData.getCurrentUsageTimes());
 
         String endorsingOrg = MSP_ID_Org1;
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentPrincipalName = authentication.getName();
+        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
 
         byte[] resultBytes = contractOrg1.newProposal("CreateAsset")
                 .addArguments(publicDescription.getBytes(), isForSale.toString().getBytes())
