@@ -1,8 +1,6 @@
 import { Component, OnInit } from '@angular/core';
-import { MatTableDataSource } from '@angular/material/table';
-import { Part } from '../../models/part';
-import { AuthService } from '../../services/auth.service';
 import {TrackingService} from "../../services/tracking.service";
+import {AuthService} from "../../core/auth/auth.service";
 
 
 @Component({
@@ -17,7 +15,7 @@ export class MarketComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    console.log(this.authService.currentUserValue);
+    console.log(this.authService.userValue);
   }
 
   displayedColumns: string[] = ['number', 'address', 'status'];

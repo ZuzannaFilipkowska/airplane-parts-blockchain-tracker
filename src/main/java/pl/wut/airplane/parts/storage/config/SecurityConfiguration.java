@@ -1,4 +1,4 @@
-package pl.wut.airplane.parts.storage.auth;
+package pl.wut.airplane.parts.storage.config;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;

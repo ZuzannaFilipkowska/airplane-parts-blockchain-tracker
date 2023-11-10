@@ -1,8 +1,8 @@
 import { Component, OnInit } from '@angular/core';
-import {AuthService} from "../../../../services/auth.service";
 import {MatTableDataSource} from "@angular/material/table";
 import {Part} from "../../../../models/part";
 import {TrackingService} from "../../../../services/tracking.service";
+import {AuthService} from "../../../../core/auth/auth.service";
 
 
 const ELEMENT_DATA: Part[] = [
@@ -90,7 +90,7 @@ export class PartsComponent implements OnInit {
     ) {}
 
     ngOnInit(): void {
-        console.log(this.authService.currentUserValue);
+        console.log(this.authService.userValue);
     }
 
     displayedColumns: string[] = ['name', 'id', 'price', 'weight', 'width', 'length'];

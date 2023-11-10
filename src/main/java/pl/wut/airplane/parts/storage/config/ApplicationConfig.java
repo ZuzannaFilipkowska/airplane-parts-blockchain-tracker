@@ -7,13 +7,13 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import pl.wut.airplane.parts.storage.auth.EmployeeRepository;
+import pl.wut.airplane.parts.storage.auth.UserRepository;
 
 @Configuration
 @RequiredArgsConstructor
 public class ApplicationConfig {
 
-    private final EmployeeRepository userRepository;
+    private final UserRepository userRepository;
 
     @Bean
     public UserDetailsService userDetailsService() {

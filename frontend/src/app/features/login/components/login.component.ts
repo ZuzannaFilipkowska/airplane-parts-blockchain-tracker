@@ -1,9 +1,9 @@
 import { Component } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup } from '@angular/forms';
-import { AuthService } from '../../../services/auth.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
 import {faBox} from "@fortawesome/free-solid-svg-icons";
+import {AuthService} from "../../../core/auth/auth.service";
 
 @Component({
   selector: 'app-login',

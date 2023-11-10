@@ -13,7 +13,7 @@ import {
   HttpClientModule,
 } from '@angular/common/http';
 import { TranslateHttpLoader } from '@ngx-translate/http-loader';
-import { AuthInterceptor } from './core/auth.interceptor';
+import {AuthInterceptor} from "./core/auth/auth.interceptor";
 
 @NgModule({
   declarations: [AppComponent],

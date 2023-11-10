@@ -10,16 +10,16 @@ import java.util.Optional;
 @Service
 public class AuthService {
 
-  private final EmployeeRepository employeeRepository;
+  private final UserRepository userRepository;
   private final PasswordEncoder passwordEncoder;
 
-  public AuthService(EmployeeRepository employeeRepository, PasswordEncoder passwordEncoder) {
-    this.employeeRepository = employeeRepository;
+  public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    this.userRepository = userRepository;
     this.passwordEncoder = passwordEncoder;
   }
 
   public AuthenticationResponse login(AuthenticationRequest authenticationRequest) {
-    Optional<Employee> response = this.employeeRepository.findUserByUsername(
+    Optional<User> response = this.userRepository.findUserByUsername(
         authenticationRequest.getUsername());
     if(response.isPresent() && passwordEncoder.matches(authenticationRequest.getPassword(), response.get().getPassword())){
       return new AuthenticationResponse(authenticationRequest.getUsername());

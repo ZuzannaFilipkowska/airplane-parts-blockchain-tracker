@@ -1,6 +1,6 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
-import { AuthGuardService } from './services/auth-guard.service';
+import {AuthGuard} from "./core/auth/auth.guard";
 
 const routes: Routes = [
   {
@@ -14,13 +14,13 @@ const routes: Routes = [
       import('./features/tracking/parts.module').then(
         (m: any) => m.PartsModule
       ),
-    canActivate: [AuthGuardService],
+    canActivate: [AuthGuard],
   },
   {
     path: 'market',
     loadChildren: () =>
       import('./features/marketplace/market.module').then((m) => m.MarketModule),
-    canActivate: [AuthGuardService],
+    canActivate: [AuthGuard],
   },
   {
     path: '**',

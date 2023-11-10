@@ -8,10 +8,9 @@ import {
   faRectangleList,
   IconDefinition,
 } from '@fortawesome/free-solid-svg-icons';
-import { AuthService } from '../../services/auth.service';
 import { Router } from '@angular/router';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { User } from '../../models/user';
+import {AuthService} from "../../core/auth/auth.service";
 
 @Component({
   selector: 'app-page',
@@ -28,7 +27,7 @@ export class PageComponent {
   faBox: IconDefinition = faBox;
   faSearch: IconDefinition = faMagnifyingGlass;
   faHistory: IconDefinition = faRectangleList;
-  isLoggedIn: boolean = false;
+  isLoggedIn$: Observable<boolean> = of(false);
 
   constructor(
     private breakpointObserver: BreakpointObserver,
@@ -36,7 +35,7 @@ export class PageComponent {
     private router: Router,
     private _snackBar: MatSnackBar
   ) {
-    this.isLoggedIn = this.authService.isAuthenticated();
+    this.isLoggedIn$ = this.authService.isLoggedIn;
   }
 
   logout() {
