@@ -6,5 +6,5 @@ services:
       - '5432:5432'
     environment:
       - 'POSTGRES_USER=user'
-      - 'POSTGRES_DB=db'
+      - 'POSTGRES_DB=parts'
       - 'POSTGRES_PASSWORD=pass'

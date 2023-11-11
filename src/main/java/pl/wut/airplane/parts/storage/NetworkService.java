@@ -13,6 +13,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
+import pl.wut.airplane.parts.storage.auth.User;
 import pl.wut.airplane.parts.storage.model.*;
 
 import java.io.IOException;
@@ -112,11 +113,6 @@ public class NetworkService {
             // Get the smart contract from the network.
             contractOrg2 = networkOrg2.getContract(CHAINCODE_NAME);
 
-            // Initialize a set of asset data on the ledger using the chaincode 'InitLedger' function.
-            //initLedger();
-        } finally {
-            // kiedy powinnam posprzatac????
-            //channel.shutdownNow().awaitTermination(5, TimeUnit.SECONDS);
         }
     }
 
@@ -131,13 +127,9 @@ public class NetworkService {
                 privateData.getPartNumber(), privateData.getDescription(), privateData.getManufacturer(), privateData.getLength(), privateData.getWidth(), privateData.getHeight(), privateData.getStatus(),
                 privateData.getLastInspectionDate(), privateData.getInspectionPerformedBy(), privateData.getNextInspectionDate(), privateData.getLifeLimit(), privateData.getCurrentUsageTimes());
 
-        String endorsingOrg = MSP_ID_Org1;
+        String endorsingOrg = getCurrentOrg();
 
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String currentPrincipalName = authentication.getName();
-        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-
-        byte[] resultBytes = contractOrg1.newProposal("CreateAsset")
+        byte[] resultBytes = getCurrentContract(endorsingOrg).newProposal("CreateAsset")
                 .addArguments(publicDescription.getBytes(), isForSale.toString().getBytes())
                 .putTransient("asset_properties",  toJson(assetPropertiesJSON))
                 .setEndorsingOrganizations(endorsingOrg)
@@ -146,16 +138,16 @@ public class NetworkService {
                 .submit();
 
         String assetID = prettyJson(resultBytes); // decode to utf
-
         System.out.println(String.format("id: %s", assetID));
-
         return assetID;
     }
 
 
     byte[] readAssetById(String assetId) throws GatewayException {
         System.out.println(String.format("\n--> Evaluate Transaction: ReadAsset, function returns asset with id: %s attributes", assetId));
-        var evaluateResult = contractOrg1.evaluateTransaction("ReadAsset", assetId);
+
+        String endorsingOrg = getCurrentOrg();
+        var evaluateResult = getCurrentContract(endorsingOrg).evaluateTransaction("ReadAsset", assetId);
 
         System.out.println("*** Result:" + prettyJson(evaluateResult));
 
@@ -165,7 +157,8 @@ public class NetworkService {
     byte[] readAssetDetailsById(String assetId) throws GatewayException {
         System.out.println(String.format("\n--> Evaluate Transaction: GetAssetPrivateProperties, function returns private asset with id: %s attributes", assetId));
 
-        var evaluateResult = contractOrg1.evaluateTransaction("GetAssetPrivateProperties", assetId);
+        String endorsingOrg = getCurrentOrg();
+        var evaluateResult = getCurrentContract(endorsingOrg).evaluateTransaction("GetAssetPrivateProperties", assetId);
 
        // System.out.println("*** Result:" + prettyJson(evaluateResult));
 
@@ -185,9 +178,8 @@ public class NetworkService {
     void setAssetForSale(String id) throws EndorseException, CommitException, SubmitException, CommitStatusException {
         System.out.println("\n--> Submit Transaction: setForSale");
 
-        String endorsingOrg = MSP_ID_Org1;
-
-        contractOrg1.newProposal("SetAssetForSale")
+        String endorsingOrg = getCurrentOrg();
+        getCurrentContract(endorsingOrg).newProposal("SetAssetForSale")
                 .addArguments(id, String.valueOf(true))
                 .setEndorsingOrganizations(endorsingOrg)
                 .build()
@@ -203,9 +195,9 @@ public class NetworkService {
 
         AssetPriceJSON assetPriceJSON = new AssetPriceJSON(id, tradeId, price);
 
-        String endorsingOrg = MSP_ID_Org1;
+        String endorsingOrg = getCurrentOrg();
 
-        contractOrg1.newProposal("AgreeToSell")
+        getCurrentContract(endorsingOrg).newProposal("AgreeToSell")
                 .addArguments(id)
                 .setEndorsingOrganizations(endorsingOrg)
                 .putTransient("asset_price",  toJson(assetPriceJSON))
@@ -246,8 +238,9 @@ public class NetworkService {
                 assetData.getLifeLimit(),
                  assetData.getCurrentUsageTimes());
 
+        String endorsingOrg = getCurrentOrg();
 
-        contractOrg2.newProposal("VerifyAssetProperties")
+        getCurrentContract(endorsingOrg).newProposal("VerifyAssetProperties")
                 .addArguments(assetId)
                 .setEndorsingOrganizations(MSP_ID_Org1, MSP_ID_Org2)
                 .putTransient("asset_properties", toJson(assetPropertiesJSON))
@@ -267,12 +260,12 @@ public class NetworkService {
                 agreeToBuyAssetRequest.getPrivateData().getPartNumber(), agreeToBuyAssetRequest.getPrivateData().getDescription(), agreeToBuyAssetRequest.getPrivateData().getManufacturer(), agreeToBuyAssetRequest.getPrivateData().getLength(), agreeToBuyAssetRequest.getPrivateData().getWidth(), agreeToBuyAssetRequest.getPrivateData().getHeight(), agreeToBuyAssetRequest.getPrivateData().getStatus(),
                 agreeToBuyAssetRequest.getPrivateData().getLastInspectionDate(), agreeToBuyAssetRequest.getPrivateData().getInspectionPerformedBy(), agreeToBuyAssetRequest.getPrivateData().getNextInspectionDate(), agreeToBuyAssetRequest.getPrivateData().getLifeLimit(), agreeToBuyAssetRequest.getPrivateData().getCurrentUsageTimes()); // ?
 
-        String endorsingOrg = MSP_ID_Org2;
+        String endorsingOrg = getCurrentOrg();
 
-        contractOrg2.newProposal("AgreeToBuy")
+        getCurrentContract(endorsingOrg).newProposal("AgreeToBuy")
                 .addArguments(assetPriceJSON.getAsset_id())
                 .setEndorsingOrganizations(endorsingOrg)
-                .putTransient("asset_price",  toJson(assetPriceJSON))
+                .putTransient("asset_price", toJson(assetPriceJSON))
                 .putTransient("asset_properties", toJson(assetPropertiesJSON))
                 .build()
                 .endorse()
@@ -287,10 +280,10 @@ public class NetworkService {
     byte[] getAllAssets() throws GatewayException {
         System.out.println("\n--> Evaluate Transaction: GetAllAssets, function returns all the current assets on the ledger");
 
-        var result = contractOrg1.evaluateTransaction("GetAllAssets", String.valueOf(new ArrayList<>()));
+        String endorsingOrg = getCurrentOrg();
+        var result = getCurrentContract(endorsingOrg).evaluateTransaction("GetAllAssets", String.valueOf(new ArrayList<>()));
 
         System.out.println("*** Result: " + prettyJson(result));
-
         return result;
     }
 
@@ -299,9 +292,10 @@ public class NetworkService {
 
         AssetPriceJSON assetPriceJSON = new AssetPriceJSON(assetId, tradeId, price);
 
-        String buyerOrgID = MSP_ID_Org2;
+        String endorsingOrg = getCurrentOrg();
+        String buyerOrgID = getBuyerOrg(endorsingOrg);
 
-        contractOrg1.newProposal("TransferAsset")
+        getCurrentContract(endorsingOrg).newProposal("TransferAsset")
                 .addArguments(assetPriceJSON.getAsset_id(), buyerOrgID)
                 .setEndorsingOrganizations(MSP_ID_Org1, MSP_ID_Org2)
                 .putTransient("asset_price",  toJson(assetPriceJSON))
@@ -310,19 +304,6 @@ public class NetworkService {
                 .submit();
 
         System.out.println("*** Transaction committed successfully");
-    }
-
-    private void setOrg1Data() {
-        // Ogarnac slowniki na zasadzie 1 - , 2
-        // zamienic w funkcjach na uzycie na podstawie current i wywolywanie setterow - wysraczt chyba dla samego mspID
-//        MSP_ID = MS //MSP_IDS[1]
-//
-//        private Path CRYPTO_PATH;
-//        private Path CERT_PATH;
-//        // Path to user private key directory.
-//        private Path KEY_DIR_PATH;
-//        // Path to peer tls certificate.
-//        private Path TLS_CERT_PATH;
     }
 
     private void initLedger() throws EndorseException, SubmitException, CommitStatusException, CommitException {
@@ -374,4 +355,19 @@ public class NetworkService {
             return keyFiles.findFirst().orElseThrow();
         }
     }
+
+    private String getCurrentOrg() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        User userDetails = (User) authentication.getPrincipal();
+        return userDetails.getOrganization();
+    }
+
+    private Contract getCurrentContract(String currentOrg) {
+        return currentOrg.equals(MSP_ID_Org1) ? this.contractOrg1 : this.contractOrg2;
+    }
+
+    private String getBuyerOrg(String seller) {
+        return seller.equals(MSP_ID_Org1) ? MSP_ID_Org2 : MSP_ID_Org1;
+    }
+
 }
