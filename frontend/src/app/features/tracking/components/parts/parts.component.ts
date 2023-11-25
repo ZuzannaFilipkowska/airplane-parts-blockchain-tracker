@@ -7,36 +7,36 @@ import {AuthService} from "../../../../core/auth/auth.service";
 
 const ELEMENT_DATA: Part[] = [
     {
-        name: 'Sensor',
-        id: 'adasdasdasd',
-        price: 100,
-        weight: 1,
-        width: 1,
+        name: 'Proximity Sensor',
+        id: '0673ef5a-6dfd-4a10-88d9-c7685972596e',
+        price: 1600,
+        weight: 23,
+        width: 6,
+        length: 7
+    },
+    {
+        name: 'Screw',
+        id: '65ded6e3-52fd-43dc-8794-d25dec48ff53',
+        price: 6,
+        weight: 0.001,
+        width: 4,
         length: 1
     },
     {
-        name: 'Sensor 2',
-        id: 'adasdaasdadsasd',
-        price: 100,
-        weight: 1,
-        width: 1,
-        length: 1
+        name: 'Cargo straps',
+        id: '31de7838-52ed-4c8b-9ff3-5b1a82bc847e',
+        price: 900,
+        weight: 37,
+        width: 10,
+        length: 1000
     },
     {
-        name: 'Sensor 3',
-        id: 'a2asdasdasd',
-        price: 100,
-        weight: 1,
-        width: 1,
-        length: 1
-    },
-    {
-        name: 'Sensor 4',
-        id: 'bbbbdasdasd',
-        price: 100,
-        weight: 1,
-        width: 1,
-        length: 1
+        name: 'Oxygen mask',
+        id: '123ea25b-8347-415b-9fd6-f641acf24670',
+        price: 50,
+        weight: 0.1,
+        width: 30,
+        length: 20
     },
 ];
 
@@ -46,11 +46,6 @@ const ELEMENT_DATA: Part[] = [
   styleUrls: ['./parts.component.scss'],
 })
 export class PartsComponent implements OnInit {
-  // packageIdControl: FormControl<string | null> = new FormControl<string>('');
-  // isLoading: boolean = false;
-  // isError: boolean = false;
-
-  // parcel: Parcel | null = null;
 
   // constructor(private helloWorldService: TrackingService) {}
 
@@ -93,11 +88,7 @@ export class PartsComponent implements OnInit {
         console.log(this.authService.userValue);
     }
 
-    displayedColumns: string[] = ['name', 'id', 'price', 'weight', 'width', 'length'];
+    displayedColumns: string[] = ['name', 'id', 'price', 'weight', 'width', 'length', 'btn'];
     dataSource = new MatTableDataSource(ELEMENT_DATA);
 
-    applyFilter(event: Event): void {
-        const filterValue = (event.target as HTMLInputElement).value;
-        this.dataSource.filter = filterValue.trim().toLowerCase();
-    }
 }

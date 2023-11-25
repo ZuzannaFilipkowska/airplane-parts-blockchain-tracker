@@ -6,6 +6,7 @@
   align-items: center;
   justify-items: center;
   background-color: $app-white;
+  border-radius: 0.5rem;
 
   &__title {
     font-size: 2.8rem;
@@ -20,6 +21,10 @@
     display: flex;
     gap: 2rem;
   }
+}
+
+.spacer {
+  flex: 1 1 auto;
 }
 
 .login-page {

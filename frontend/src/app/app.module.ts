@@ -25,7 +25,7 @@ import {AuthInterceptor} from "./core/auth/auth.interceptor";
     ReactiveFormsModule,
     HttpClientModule,
     TranslateModule.forRoot({
-      defaultLanguage: 'en',
+      defaultLanguage: 'pl',
       loader: {
         provide: TranslateLoader,
         useFactory: HttpLoaderFactory,

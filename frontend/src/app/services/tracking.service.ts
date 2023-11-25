@@ -30,7 +30,12 @@ export class TrackingService {
 
   // ew moglaby byc cala sprzedaz
 
-
+ getAllPackages(): Observable<any> {
+    return this.http.get<any>(
+      `${this.apiUrl}/tracking`,
+      this.httpOptions
+    );
+  }
 
   getPackageData(id: string): Observable<any> {
     return this.http.get<any>(

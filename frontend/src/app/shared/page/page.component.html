@@ -34,13 +34,13 @@
       <span class="sidenav-container__title">Magazyn danych blockchain</span>
       <span class="page__toolbar-spacer"></span>
       <div class="page__toolbar-menu" *ngIf="isLoggedIn$">
-        <button
-          mat-button
-          [matMenuTriggerFor]="menu"
-          class="page__toolbar-menu-btn"
-        >
-          Menu
-        </button>
+        <div>
+          <fa-icon [icon]="faSettings" [matMenuTriggerFor]="menu"
+                   class="page__toolbar-menu-btn"></fa-icon>
+          <span class="page__toolbar-menu-text">Ustawienia</span>
+
+        </div>
+
         <mat-menu #menu="matMenu">
           <button mat-menu-item (click)="logout()">Wyloguj</button>
         </mat-menu>

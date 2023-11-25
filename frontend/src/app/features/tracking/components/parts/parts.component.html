@@ -1,5 +1,11 @@
 <app-page>
     <section class="parts">
+        <div class="parts__new">
+            <span class="spacer"></span>
+            <button mat-button class="btn btn-secondary">
+                {{ "parts.add" | translate }}
+            </button>
+        </div>
         <header class="parts__header">
             <h2>Wszystkie części</h2>
         </header>
@@ -26,71 +32,37 @@
                 </ng-container>
 
                 <ng-container matColumnDef="price">
-                    <th mat-header-cell *matHeaderCellDef>Cena</th>
+                    <th mat-header-cell *matHeaderCellDef>Cena [EUR]</th>
                     <td mat-cell *matCellDef="let element">{{ element.price }}</td>
                 </ng-container>
 
                 <ng-container matColumnDef="weight">
-                    <th mat-header-cell *matHeaderCellDef>Waga</th>
+                    <th mat-header-cell *matHeaderCellDef>Waga [kg]</th>
                     <td mat-cell *matCellDef="let element">{{ element.weight}}</td>
                 </ng-container>
 
                 <ng-container matColumnDef="width">
-                    <th mat-header-cell *matHeaderCellDef>Szerokość</th>
+                    <th mat-header-cell *matHeaderCellDef>Szerokość [cm]</th>
                     <td mat-cell *matCellDef="let element">{{ element.width}}</td>
                 </ng-container>
 
                 <ng-container matColumnDef="length">
-                    <th mat-header-cell *matHeaderCellDef>Długość</th>
+                    <th mat-header-cell *matHeaderCellDef>Długość [cm]</th>
                     <td mat-cell *matCellDef="let element">{{ element.length}}</td>
+                </ng-container>
+
+                <ng-container matColumnDef="btn">
+                    <th mat-header-cell *matHeaderCellDef></th>
+                    <td mat-cell *matCellDef="let element">
+                        <button mat-button class="btn btn-primary">
+                            {{ "parts.more" | translate }}
+                        </button>
+                    </td>
                 </ng-container>
 
                 <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
                 <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
-
-<!--                &lt;!&ndash; Row shown when there is no matching data. &ndash;&gt;-->
-<!--                <tr class="mat-row" *matNoDataRow>-->
-<!--                    <td class="mat-cell" colspan="4">-->
-<!--                        No data matching the filter "{{ input.value }}"-->
-<!--                    </td>-->
-<!--                </tr>-->
             </table>
         </div>
     </section>
-
-<!--  <section class="tracking">-->
-<!--    <div class="tracking__search">-->
-<!--      <mat-card color="secondary" class="tracking__title">-->
-<!--        <p>{{ "tracking.track" | translate }}:</p>-->
-<!--      </mat-card>-->
-<!--      <div class="tracking__search-field">-->
-<!--        <mat-form-field appearance="fill" color="secondary">-->
-<!--          <mat-label>{{ "tracking.enterId" | translate }}</mat-label>-->
-<!--          <input matInput type="text" [formControl]="packageIdControl" />-->
-<!--        </mat-form-field>-->
-<!--      </div>-->
-<!--      <div-->
-<!--        class="tracking__search-results"-->
-<!--        *ngIf="!isLoading; else showSpinner"-->
-<!--      >-->
-<!--        <div class="tracking__parcel" *ngIf="parcel">-->
-<!--          <p class="tracking__parcel-text">-->
-<!--            {{ "tracking.parcel.status" | translate }} {{ parcel.status }}-->
-<!--          </p>-->
-<!--          <p class="tracking__parcel-text">-->
-<!--            {{ "tracking.parcel.address" | translate }} {{ parcel.address }}-->
-<!--          </p>-->
-<!--          <p class="tracking__parcel-text">-->
-<!--            {{ "tracking.parcel.number" | translate }} {{ parcel.trackingId }}-->
-<!--          </p>-->
-<!--        </div>-->
-<!--        <div *ngIf="!parcel" class="tracking__no-data">-->
-<!--          {{ "tracking.noData" | translate }}-->
-<!--        </div>-->
-<!--      </div>-->
-<!--      <ng-template #showSpinner>-->
-<!--        <mat-spinner class="tracking__spinner"></mat-spinner>-->
-<!--      </ng-template>-->
-<!--    </div>-->
-<!--  </section>-->
 </app-page>

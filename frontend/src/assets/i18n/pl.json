@@ -24,5 +24,9 @@
   },
   "history": {
     "title": "Your search history:"
+  },
+  "parts": {
+    "add": "Dodaj element  +",
+    "more": "Zobacz więcej"
   }
 }

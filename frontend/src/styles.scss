@@ -106,3 +106,15 @@ mat-card {
     background-color: $app-purple-dark;
   }
 }
+
+.btn-secondary {
+  background-color: $app-color-yellow;
+  color: $app-blue-dark;
+}
+
+.mat-toolbar {
+  .sidenav__box-icon {
+    margin-right: 1rem;
+    color: $app-color-yellow;
+  }
+}

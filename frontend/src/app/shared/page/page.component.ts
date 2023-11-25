@@ -3,7 +3,7 @@ import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { Observable, of } from 'rxjs';
 import { map, shareReplay } from 'rxjs/operators';
 import {
-  faBox,
+  faBox, faGear,
   faMagnifyingGlass,
   faRectangleList,
   IconDefinition,
@@ -28,6 +28,7 @@ export class PageComponent {
   faSearch: IconDefinition = faMagnifyingGlass;
   faHistory: IconDefinition = faRectangleList;
   isLoggedIn$: Observable<boolean> = of(false);
+  faSettings: IconDefinition = faGear;
 
   constructor(
     private breakpointObserver: BreakpointObserver,

@@ -28,6 +28,7 @@
             "scripts": []
           },
           "configurations": {
+            // how to set prod configuration to use prod environment.ts
             "production": {
               "budgets": [
                 {

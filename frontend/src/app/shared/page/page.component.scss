@@ -34,6 +34,8 @@
 
 .sidenav__box-icon {
   margin-left: 3rem;
+  margin-right: 1rem;
+  color: $app-color-yellow;
 }
 
 .mat-sidenav-content {
@@ -49,10 +51,16 @@
       align-items: center;
     }
 
+    &-menu-text {
+      color: $app-grey-dark;
+    }
+
     &-menu-btn {
-      background-color: $app-grey-dark;
-      width: 12rem;
+      width: 14rem;
       margin-right: 2rem;
+      cursor: pointer;
+      color: $app-color-yellow;
+      background: $app-white;
     }
 
     &-spacer {
