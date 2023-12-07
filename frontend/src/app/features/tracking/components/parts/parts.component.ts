@@ -1,6 +1,6 @@
 import {Component, Inject} from '@angular/core';
 import {MatTableDataSource} from "@angular/material/table";
-import {Part} from "../../../../models/part";
+import {Part, PublicPartInfo} from "../../../../models/part";
 import {TrackingService} from "../../../../services/tracking.service";
 import {MAT_DIALOG_DATA, MatDialog, MatDialogModule, MatDialogRef} from "@angular/material/dialog";
 import {MatButtonModule} from "@angular/material/button";
@@ -50,18 +50,18 @@ const ELEMENT_DATA: Part[] = [
 })
 export class PartsComponent {
 
-    dataSource!: MatTableDataSource<Part>;
+    dataSource!: MatTableDataSource<PublicPartInfo>;
 
     constructor(
         private trackingService: TrackingService,
         public dialog: MatDialog
     ) {
-        this.trackingService.getAllParts().subscribe((data: Part[]) => {
+        this.trackingService.getAllParts().subscribe((data: PublicPartInfo[]) => {
             this.dataSource = new MatTableDataSource(data);
         });
     }
 
-    displayedColumns: string[] = ['name', 'id', 'price', 'weight', 'width', 'length', 'btn'];
+    displayedColumns: string[] = ['ownerOrg', 'assetID', 'price', 'publicDescription', 'isForSale', 'btn'];
 
     openDialog(): void {
         const dialogRef = this.dialog.open(DialogOverviewExampleDialog, {

@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import {environment} from "../../environments/environment";
-import {Part} from "../models/part";
+import {Part, PublicPartInfo} from "../models/part";
 import {ALL_PARTS} from "../core/config/api-paths";
 
 @Injectable({
@@ -18,8 +18,8 @@ export class TrackingService {
 
   constructor(private http: HttpClient) {}
 
-  getAllParts(): Observable<Part[]> {
-    return this.http.get<Part[]>(
+  getAllParts(): Observable<PublicPartInfo[]> {
+    return this.http.get<PublicPartInfo[]>(
       `${this.apiUrl}${ALL_PARTS}`,
       this.httpOptions
     );

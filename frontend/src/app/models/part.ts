@@ -6,3 +6,10 @@ export interface Part {
   width: number;
   length: number;
 }
+
+export interface PublicPartInfo {
+  assetID: string;
+  ownerOrg: string;
+  publicDescription: string;
+  isForSale: boolean;
+}
