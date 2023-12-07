@@ -29,7 +29,13 @@ public class NetworkController {
 
   @PostMapping("/parts")
   public ResponseEntity<String> addPart(@RequestBody CreateAssetRequest request) throws GatewayException, CommitException, IOException {
-    return ResponseEntity.created(URI.create("")).body(networkService.createAsset(request.getPublicDescription(), request.getIsForSale(), request.getPrivateData()));
+    try {
+      return ResponseEntity.created(URI.create("")).body(networkService.createAsset(request.getPublicDescription(), request.getIsForSale(), request.getPrivateData()));
+    }
+    catch (Exception e) {
+      throw new ResponseStatusException(
+              HttpStatus.BAD_REQUEST, "Invalid asset data", e);
+    }
   }
 
   @GetMapping("/parts/{id}")
