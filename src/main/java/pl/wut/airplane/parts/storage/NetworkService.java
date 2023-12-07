@@ -11,7 +11,6 @@ import org.hyperledger.fabric.client.*;
 import org.hyperledger.fabric.client.identity.*;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import pl.wut.airplane.parts.storage.auth.User;
 import pl.wut.airplane.parts.storage.model.*;
@@ -89,14 +88,7 @@ public class NetworkService {
 
             // Get the smart contract from the network.
             contractOrg1 = networkOrg1.getContract(CHAINCODE_NAME);
-
-            // Initialize a set of asset data on the ledger using the chaincode 'InitLedger' function.
-            initLedger();
-        } finally {
-            // kiedy powinnam posprzatac????
-            //channel.shutdownNow().awaitTermination(5, TimeUnit.SECONDS);
         }
-
         var channelOrg2 = newGrpcConnection(TLS_CERT_PATH_Org2, PEER_ENDPOINT_Org2, OVERRIDE_AUTH_Org2);
 
         var builderOrg2 = Gateway.newInstance().identity(newIdentity(CERT_PATH_Org2, MSP_ID_Org2)).signer(newSigner(String.valueOf(KEY_DIR_PATH_Org2))).connection(channelOrg2)
@@ -116,10 +108,6 @@ public class NetworkService {
         }
     }
 
-    /**
-     * Submit a transaction synchronously, blocking until it has been committed to
-     * the ledger.
-     */
     String createAsset(String publicDescription, Boolean isForSale, AssetPrivateData privateData) throws GatewayException, CommitException {
         System.out.println("\n--> Submit Transaction: CreateAsset, creates new asset");
 
@@ -159,8 +147,6 @@ public class NetworkService {
 
         String endorsingOrg = getCurrentOrg();
         var evaluateResult = getCurrentContract(endorsingOrg).evaluateTransaction("GetAssetPrivateProperties", assetId);
-
-       // System.out.println("*** Result:" + prettyJson(evaluateResult));
 
         return evaluateResult;
     }
@@ -209,17 +195,6 @@ public class NetworkService {
     }
 
     void verifyAssetProperties(String assetId, AssetProperties assetData) throws GatewayException {
-
-//        int leftLimit = 48; // numeral '0'
-//        int rightLimit = 122; // letter 'z'
-//        int targetStringLength = 10;
-//        Random random = new Random();
-//
-//        String salt = random.ints(leftLimit, rightLimit + 1)
-//                .filter(i -> (i <= 57 || i >= 65) && (i <= 90 || i >= 97))
-//                .limit(targetStringLength)
-//                .collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)
-//                .toString();
 
         AssetPropertiesJSON assetPropertiesJSON = new AssetPropertiesJSON(
             "asset_properties",
@@ -302,14 +277,6 @@ public class NetworkService {
                 .build()
                 .endorse()
                 .submit();
-
-        System.out.println("*** Transaction committed successfully");
-    }
-
-    private void initLedger() throws EndorseException, SubmitException, CommitStatusException, CommitException {
-        System.out.println("\n--> Submit Transaction: InitLedger, function creates the initial set of assets on the ledger");
-
-        //contract.submitTransaction("InitLedger");
 
         System.out.println("*** Transaction committed successfully");
     }

@@ -1,9 +1,12 @@
-import { Component, OnInit } from '@angular/core';
+import {Component, Inject} from '@angular/core';
 import {MatTableDataSource} from "@angular/material/table";
 import {Part} from "../../../../models/part";
 import {TrackingService} from "../../../../services/tracking.service";
-import {AuthService} from "../../../../core/auth/auth.service";
-
+import {MAT_DIALOG_DATA, MatDialog, MatDialogModule, MatDialogRef} from "@angular/material/dialog";
+import {MatButtonModule} from "@angular/material/button";
+import {MatFormFieldModule} from "@angular/material/form-field";
+import {MatInputModule} from "@angular/material/input";
+import {FormBuilder, FormGroup, ReactiveFormsModule} from "@angular/forms";
 
 const ELEMENT_DATA: Part[] = [
     {
@@ -45,50 +48,63 @@ const ELEMENT_DATA: Part[] = [
   templateUrl: './parts.component.html',
   styleUrls: ['./parts.component.scss'],
 })
-export class PartsComponent implements OnInit {
+export class PartsComponent {
 
-  // constructor(private helloWorldService: TrackingService) {}
-
-  // ngOnInit(): void {
-  //   this.packageIdControl.valueChanges
-  //     .pipe(
-  //       distinctUntilChanged(),
-  //       tap((id: any) => {
-  //         this.isLoading = true;
-  //         this.helloWorldService
-  //           .getPackageData(<string>this.packageIdControl.value)
-  //           .pipe(take(1))
-  //           .subscribe(
-  //             (res: any) => {
-  //               this.parcel = res
-  //                 ? {
-  //                     status: res.status,
-  //                     address: res.address,
-  //                     trackingId: res.trackingNumber,
-  //                   }
-  //                 : res;
-  //               this.isLoading = false;
-  //             },
-  //             (error) => {
-  //               this.isLoading = false;
-  //               this.parcel = null;
-  //             }
-  //           );
-  //       })
-  //     )
-  //     .subscribe();
-  // }
+    dataSource!: MatTableDataSource<Part>;
 
     constructor(
         private trackingService: TrackingService,
-        private authService: AuthService
-    ) {}
-
-    ngOnInit(): void {
-        console.log(this.authService.userValue);
+        public dialog: MatDialog
+    ) {
+        this.trackingService.getAllParts().subscribe((data: Part[]) => {
+            this.dataSource = new MatTableDataSource(data);
+        });
     }
 
     displayedColumns: string[] = ['name', 'id', 'price', 'weight', 'width', 'length', 'btn'];
-    dataSource = new MatTableDataSource(ELEMENT_DATA);
 
+    openDialog(): void {
+        const dialogRef = this.dialog.open(DialogOverviewExampleDialog, {
+            data: {},
+        });
+    }
+}
+
+interface DialogData {
+}
+
+@Component({
+    selector: 'app-add-part-dialog',
+    templateUrl: 'app-add-part-dialog.html',
+    standalone: true,
+    imports: [
+        MatDialogModule,
+        MatButtonModule,
+        MatDialogModule,
+        MatFormFieldModule,
+        MatInputModule,
+        ReactiveFormsModule
+    ],
+})
+export class DialogOverviewExampleDialog {
+    form: FormGroup;
+    constructor(
+        public dialogRef: MatDialogRef<DialogOverviewExampleDialog>,
+        @Inject(MAT_DIALOG_DATA) public data: DialogData,
+        private fb: FormBuilder
+    ) {
+        this.form = fb.group({
+            name: [''],
+            price: [''],
+            id: [''],
+            desc: [''],
+            weight: [''],
+            width: [''],
+            length: [''],
+        });
+    }
+
+    onNoClick(): void {
+        this.dialogRef.close();
+    }
 }

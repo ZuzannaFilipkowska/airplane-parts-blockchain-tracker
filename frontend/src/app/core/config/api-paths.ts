@@ -1,2 +1,3 @@
-export const REGISTER = '/auth/signup';
 export const LOGIN = '/auth/signin';
+
+export const ALL_PARTS = '/parts/all';

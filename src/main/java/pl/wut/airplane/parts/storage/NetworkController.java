@@ -19,17 +19,6 @@ public class NetworkController {
   private final NetworkService networkService;
 
   public NetworkController(NetworkService networkService)  {
-    // @TODO FLOW: Chaincode mam w Go -> mam gateway tylko w ts -> musze napisac na bazie tego odpowiednie funkcje w springu, to co mam w springu to jest basic asset transfer
-    // 1. krok ref - pzeniesc do serwisu - DONE
-    // 2. ogarnac set up na dwie org
-    // 3. sprawdzic czy dzialaja te endpointy co dodalam -
-    // 4. dopisac pozostale endpointy
-    // 7. dalej by byly potrzebne endpointy do spedzay lub edycji
-    // 10. posprzatac
-    // 11. dane init, readme
-    // 12. uzyc serwisu
-    // 13. usunac niuzywane klasy
-    // 14. couch db
     this.networkService = networkService;
   }
 
@@ -83,7 +72,6 @@ public class NetworkController {
       return ResponseEntity.ok().build();
   }
 
-  // 3. Agree to sell by org1 przyjmujace cene, zawiera losowe tradeId (AgreeToSell)
     @PatchMapping("/parts/{id}/price")
   public ResponseEntity<String> agreeToSell(@PathVariable String id, @RequestParam Long price, @RequestParam String tradeId) throws GatewayException, CommitException, IOException {
       try {
@@ -96,9 +84,6 @@ public class NetworkController {
       return ResponseEntity.ok().build();
   }
 
-
-  // 3.5 Verify asset properties as org 2
-
     @PostMapping("/parts/{assetId}")
   public ResponseEntity<String> verifyAssetProperties(@RequestBody AssetProperties asset, @PathVariable String assetId) throws GatewayException, CommitException, IOException {
     try {
@@ -110,7 +95,6 @@ public class NetworkController {
     }
     return ResponseEntity.ok().build();
   }
-  // 4. Agree to buy as org 2
 
   @PostMapping("/market/{id}")
   public ResponseEntity<String> agreeToBuy(@RequestBody AgreeToBuyAssetRequest agreeToBuyAssetRequest, @PathVariable String id) throws GatewayException, CommitException, IOException {
@@ -124,129 +108,15 @@ public class NetworkController {
     return ResponseEntity.ok().build();
   }
 
-  // 5. Transfer
-
   @PatchMapping("/parts/{id}/owner")
   public ResponseEntity<byte[]> changeAssetOwner(@PathVariable String id, @RequestBody TransferAssetRequest request) {
     try {
       networkService.transferAsset(id, request.getPrice(), request.getTradeID());
     } catch (Exception e) {
-      System.out.println(e);
             throw new ResponseStatusException(
               HttpStatus.NOT_FOUND, "Asset Not Found", e);
     }
     return ResponseEntity.ok().build();
 
   }
-
-    // 3.5 Dodanie params na obie org
-  // 3.6 Weryfikacja czys zrobic jako org 2
-
-  // pisanie + front + auth
-
-  // 6. W ogole endpoint do edycji sie przyda ;)
-
-  // 7. Enpoint na pobranie historii
-
-  // 8. podpiac baze danych i basic auth
-
-  // 9. podpiac frontend
-
-  // 10. testy
-
-
-
-// @TODO: Tego na razie nie potrzebuje, ale spoko wzor
-//  @PutMapping("/parts/{id}")
-//  public ResponseEntity<String> changePublicDescription(@PathVariable String id, @RequestBody CreateAssetRequest request) throws GatewayException, CommitException, IOException {
-//    // @TODO
-//    return ResponseEntity.created(URI.create("")).body(createAsset(request.getPublicDescription(), request.getPrivateData()));
-//  }
-//
-
-
-//  @GetMapping("/market/{id}")
-//  public ResponseEntity<String> verifyAssetProperties(@PathVariable String id, @RequestBody CreateAssetRequest request) throws GatewayException, CommitException, IOException {
-//    // @TODO
-//    return ResponseEntity.created(URI.create("")).body(createAsset(request.getPublicDescription(), request.getPrivateData()));
-//  }
-
-//  @PutMapping("/market/{id}/owner")
-//  public ResponseEntity<String> agreeToBuy(@PathVariable String id, @RequestBody CreateAssetRequest request) throws GatewayException, CommitException, IOException {
-//    // @TODO
-//    return ResponseEntity.created(URI.create("")).body(createAsset(request.getPublicDescription(), request.getPrivateData()));
-//  }
-
-
-//  private byte[] convertToBytes(Object object) throws IOException {
-//    try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
-//         ObjectOutputStream out = new ObjectOutputStream(bos)) {
-//      out.writeObject(object);
-//      return bos.toByteArray();
-//    }
-//  }
-
-  // @todo TU MNIE JESZCZE NIE BYLO
-  /**
-   * Submit transaction asynchronously, allowing the application to process the
-   * smart contract response (e.g. update a UI) while waiting for the commit
-   * notification.
-   */
-//  private void transferAssetAsync() throws EndorseException, SubmitException, CommitStatusException {
-//    System.out.println("\n--> Async Submit Transaction: TransferAsset, updates existing asset owner");
-//
-//    var commit = contract.newProposal("TransferAsset")
-//        .addArguments(assetId, "Saptha")
-//        .build()
-//        .endorse()
-//        .submitAsync();
-//
-//    var result = commit.getResult();
-//    var oldOwner = new String(result, StandardCharsets.UTF_8);
-//
-//    System.out.println("*** Successfully submitted transaction to transfer ownership from " + oldOwner + " to Saptha");
-//    System.out.println("*** Waiting for transaction commit");
-//
-//    var status = commit.getStatus();
-//    if (!status.isSuccessful()) {
-//      throw new RuntimeException("Transaction " + status.getTransactionId() +
-//          " failed to commit with status code " + status.getCode());
-//    }
-//
-//    System.out.println("*** Transaction committed successfully");
-//  }
-
-
-  // @TODO Przyklad ze nie dziala cos
-  /**
-   * submitTransaction() will throw an error containing details of any error
-   * responses from the smart contract.
-   */
-//  private void updateNonExistentAsset() {
-//    try {
-//      System.out.println("\n--> Submit Transaction: UpdateAsset asset70, asset70 does not exist and should return an error");
-//
-//      contract.submitTransaction("UpdateAsset", "asset70", "blue", "5", "Tomoko", "300");
-//
-//      System.out.println("******** FAILED to return an error");
-//    } catch (EndorseException | SubmitException | CommitStatusException e) {
-//      System.out.println("*** Successfully caught the error: ");
-//      e.printStackTrace(System.out);
-//      System.out.println("Transaction ID: " + e.getTransactionId());
-//
-//      var details = e.getDetails();
-//      if (!details.isEmpty()) {
-//        System.out.println("Error Details:");
-//        for (var detail : details) {
-//          System.out.println("- address: " + detail.getAddress() + ", mspId: " + detail.getMspId()
-//              + ", message: " + detail.getMessage());
-//        }
-//      }
-//    } catch (CommitException e) {
-//      System.out.println("*** Successfully caught the error: " + e);
-//      e.printStackTrace(System.out);
-//      System.out.println("Transaction ID: " + e.getTransactionId());
-//      System.out.println("Status code: " + e.getCode());
-//    }
-//  }
 }

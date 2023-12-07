@@ -12,6 +12,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import {MatTableModule} from "@angular/material/table";
 import {PartsComponent} from "./components/parts/parts.component";
 import {MatButtonModule} from "@angular/material/button";
+import { MatDialogModule} from "@angular/material/dialog";
 
 @NgModule({
   declarations: [PartsComponent],
@@ -28,6 +29,7 @@ import {MatButtonModule} from "@angular/material/button";
     MatProgressSpinnerModule,
     MatTableModule,
     MatButtonModule,
+      MatDialogModule
   ],
   exports: [PartsComponent],
 })

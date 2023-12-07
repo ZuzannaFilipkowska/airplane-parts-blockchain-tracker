@@ -14,7 +14,7 @@ const routes: Routes = [
       import('./features/tracking/parts.module').then(
         (m: any) => m.PartsModule
       ),
-    //canActivate: [AuthGuard],
+    canActivate: [AuthGuard],
   },
   {
     path: 'market',
