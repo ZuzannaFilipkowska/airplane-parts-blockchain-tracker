@@ -119,18 +119,19 @@ func (s *SmartContract) SetAssetForSale(ctx contractapi.TransactionContextInterf
 
 	asset, err := s.ReadAsset(ctx, assetID)
 	if err != nil {
-		return fmt.Errorf("failed to get asset: %v", err)
+		return fmt.Errorf("Failed to get asset: %v", err)
 	}
 
-	// Auth check to ensure that client's org actually owns the asset
+	// Auth check to ensure that client's organization owns the asset
 	if clientOrgID != asset.OwnerOrg {
-		return fmt.Errorf("a client from %s cannot update the description of a asset owned by %s", clientOrgID, asset.OwnerOrg)
+		return fmt.Errorf("A client from %s cannot set for sale asset owned by %s", clientOrgID, asset.OwnerOrg)
 	}
 
 	asset.IsForSale = true
 	updatedAssetJSON, err := json.Marshal(asset)
+	
 	if err != nil {
-		return fmt.Errorf("failed to marshal asset: %v", err)
+		return fmt.Errorf("Failed to marshal asset: %v", err)
 	}
 
 	return ctx.GetStub().PutState(assetID, updatedAssetJSON)
