@@ -1,3 +1,5 @@
+Setting up network:
+1. Write in terminal:
 export PATH=$PATH:/opt/gradle/gradle-8.3/bin
 
 sudo ./network.sh  down
@@ -5,16 +7,20 @@ sudo ./network.sh up createChannel -s couchdb -c mychannel
 sudo ./network.sh deployCC -ccn secured -ccp ../asset-transfer-private-data/airplane-parts-blockchain-tracker/chaincode/ -ccl go -ccep "OR('Org1MSP.peer','Org2MSP.peer')" 
 sudo chmod 777 -R ../*
 
-# najpierw trzeba odpalic baze
+Setting up SQL database:
 docker-compose up --build
-# backend trzeba odpalic z terminala
+
+Setting up backend REST API:
+1. Write in terminal from directory with gradle set up
 sudo ./gradlew bootRun
 
-# teraz mozna odpalac front albo wysylac zapytania do backendu
+Setting up frontend
+1. npm i
+2. npm start
 
 
 ################################################################################################################
-# Zeby operowac z terminala:
+# Example usage of network from peer terminal 
 
 #Set the environment variables to operate as Org1
 export PATH=${PWD}/../bin:${PWD}:$PATH
