@@ -17,6 +17,17 @@ I developed this project as a crucial component of my engineering thesis, focusi
 Detailed architecture:
 ![Architektura sieci](images/projekt_2.png)
 
+## UI
+
+Login page:
+![Login page](images/front_logowanie (1).png)
+
+View after login:
+![Main page](images/front_twoje_czesci (1).png)
+
+Marketplace:
+![Marketplace](images/front_market.png)
+
 ## Technologies used:
 - **Frontend** - Angular framework
 - **Backend** - Java + Spring Bott + Hyperledger Fabric Spring Boot Starter
