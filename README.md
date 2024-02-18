@@ -17,13 +17,16 @@ I developed this project as a crucial component of my engineering thesis, focusi
 Detailed architecture:
 ![Architektura sieci](images/projekt_2.png)
 
+## BPMN Sale process
+![BPMN](images/bpmn.png)
+
 ## UI
 
 Login page:
-![Login page](images/front_logowanie (1).png)
+![Login page](images/front_logowanie.png)
 
 View after login:
-![Main page](images/front_twoje_czesci (1).png)
+![Main page](images/front_twoje_czesci.png)
 
 Marketplace:
 ![Marketplace](images/front_market.png)
