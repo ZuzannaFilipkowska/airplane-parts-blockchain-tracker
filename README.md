@@ -10,6 +10,9 @@ I developed this project as a crucial component of my engineering thesis, focusi
 - **User Authentication:** Multi-layered user authentication for controlled access and enhanced security.
 - **Hyperledger Fabric Integration:** Leveraging the power of Hyperledger Fabric for a trusted and efficient blockchain network.
 
+## Architecture
+![MDB Logo](images/project.png)
+
 ## Getting Started:
 
 Setting up the network is described in [run.sh](run.sh).
