@@ -12,7 +12,16 @@ I developed this project as a crucial component of my engineering thesis, focusi
 
 ## Architecture
 ![Architektura systemu](images/projekt_1.jpg)
+
+Detailed architecture:
 ![Architektura sieci](images/projekt_2.png)
+
+## Technologies used:
+- **Frontend** - Angular framework
+- **Backend** - Java + Spring Bott + Hyperledger Fabric Spring Boot Starter
+- **Database** - PostgreSQL
+- **Blockchain network** - Private Hyperledger Fabric network. Fabric Gateway was used to access network. Each organization has private data storage component. Smart contracts were written using Go.
+  
 ## Getting Started:
 
 Setting up the network is described in [run.sh](run.sh).
