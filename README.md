@@ -1,6 +1,7 @@
 # airplane-parts-blockchain-tracker
 MDB (Magazyn Danych Blockchain) Project
-Welcome to the MDB project repository, a system designed to revolutionize how information about aviation components is stored and managed using blockchain technology.
+Welcome to the MDB project repository, a system designed to revolutionize how information about airplane parts is stored and managed using blockchain technology.
+
 I developed this project as a crucial component of my engineering thesis, focusing on the topic of "Data Storage of Aircraft Parts Maintenance Using Blockchain Technology."
 
 ## Features:
