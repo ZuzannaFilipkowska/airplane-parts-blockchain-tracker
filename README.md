@@ -11,8 +11,8 @@ I developed this project as a crucial component of my engineering thesis, focusi
 - **Hyperledger Fabric Integration:** Leveraging the power of Hyperledger Fabric for a trusted and efficient blockchain network.
 
 ## Architecture
-![MDB Logo](images/projekt_1.png)
-
+![Architektura systemu](images/projekt_1.jpg)
+![Architektura sieci](images/projekt_2.png)
 ## Getting Started:
 
 Setting up the network is described in [run.sh](run.sh).
